@@ -26,11 +26,11 @@ public sealed class BuffIconRecognizer
 
     private BuffIconRecognizer()
     {
-        Application.Current.Dispatcher.Invoke(() =>
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
             foreach (var definition in BuffCatalog.Buffs)
             {
-                if (Application.Current.TryFindResource(definition.IconResourceKey) is not ImageSource source)
+                if (System.Windows.Application.Current.TryFindResource(definition.IconResourceKey) is not ImageSource source)
                 {
                     continue;
                 }
@@ -71,7 +71,7 @@ public sealed class BuffIconRecognizer
 
         var trackedSet = trackedSpellIds?.Any() == true ? new HashSet<int>(trackedSpellIds) : null;
         var rect = new Rectangle(0, 0, capture.Width, capture.Height);
-        var data = capture.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+        var data = capture.LockBits(rect, ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
         try
         {
             var bytes = new byte[data.Stride * data.Height];
@@ -258,7 +258,7 @@ public sealed class BuffIconRecognizer
         }
     }
 
-    private static BitmapSource EnsureFormat(BitmapSource source, PixelFormat format)
+    private static BitmapSource EnsureFormat(BitmapSource source, System.Windows.Media.PixelFormat format)
     {
         if (source.Format == format)
         {

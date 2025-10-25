@@ -9,7 +9,7 @@ namespace Fellowship_overlay;
 
 public partial class CaptureRegionWindow : Window
 {
-    private Point? _dragStart;
+    private System.Windows.Point? _dragStart;
     private Rect? _selectedRect;
     private Matrix _transformToDevice = Matrix.Identity;
 
@@ -35,7 +35,7 @@ public partial class CaptureRegionWindow : Window
         Height = SystemParameters.VirtualScreenHeight;
     }
 
-    private void OnMouseDown(object sender, MouseButtonEventArgs e)
+    private void OnMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         CaptureMouse();
         _dragStart = e.GetPosition(this);
@@ -43,7 +43,7 @@ public partial class CaptureRegionWindow : Window
         UpdateSelection(e.GetPosition(this));
     }
 
-    private void OnMouseMove(object sender, MouseEventArgs e)
+    private void OnMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
     {
         if (_dragStart.HasValue)
         {
@@ -51,7 +51,7 @@ public partial class CaptureRegionWindow : Window
         }
     }
 
-    private void OnMouseUp(object sender, MouseButtonEventArgs e)
+    private void OnMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (_dragStart.HasValue)
         {
@@ -74,7 +74,7 @@ public partial class CaptureRegionWindow : Window
         }
     }
 
-    private void UpdateSelection(Point current)
+    private void UpdateSelection(System.Windows.Point current)
     {
         if (!_dragStart.HasValue)
         {
@@ -93,7 +93,7 @@ public partial class CaptureRegionWindow : Window
         SelectionRectangle.Height = height;
     }
 
-    private void OnWindowKeyDown(object sender, KeyEventArgs e)
+    private void OnWindowKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key == Key.Escape)
         {
