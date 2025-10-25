@@ -18,7 +18,7 @@ namespace Fellowship_overlay.Core
     public sealed class Buff
     {
         public int SpellId { get; init; }
-        public string Name { get; init; } = "";
+        public string Name { get; set; } = "";
         public int Stacks { get; set; } = 1;
         public DateTimeOffset AppliedAt { get; set; }
         public DateTimeOffset? ExpiresAt { get; set; } // null = indefinite (-1)
