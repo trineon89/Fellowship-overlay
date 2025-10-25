@@ -21,6 +21,12 @@
     <PackageReference Include="NetSparkleUpdater.UI.WPF" Version="3.0.4" />
   </ItemGroup>
 
+<ItemGroup>
+    <Content Include="Assets\FellowshipBuffs.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>

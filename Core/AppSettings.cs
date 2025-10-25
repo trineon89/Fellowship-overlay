@@ -8,7 +8,9 @@ public sealed class AppSettings
     public string? LogDirectory { get; set; }
     public string? PlayerName { get; set; }
     public string? PlayerGuid { get; set; }
-    public bool ClickThrough { get; set; } = true;
+    public bool ClickThrough { get; set; } = true; // legacy setting retained for backward compatibility
+    public bool OverlaysLocked { get; set; } = true;
+    public bool DebugEnabled { get; set; }
     public List<OverlaySettings> Overlays { get; set; } = new();
 }
 

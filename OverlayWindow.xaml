@@ -9,8 +9,8 @@
         AllowsTransparency="True"
         Background="Transparent"
         ShowInTaskbar="False"
-        ResizeMode="NoResize">
-    <Border Background="#CC000000" CornerRadius="12" Padding="12">
+        ResizeMode="CanResizeWithGrip">
+    <Border Background="#CC000000" CornerRadius="12" Padding="12" MouseLeftButtonDown="OnOverlayMouseDown">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -24,6 +24,14 @@
                            FontWeight="SemiBold"
                            Foreground="White"
                            DockPanel.Dock="Left" />
+                <TextBlock x:Name="MoveHintTextBlock"
+                           Text="Unlocked — drag to move or use the grip to resize"
+                           Foreground="#FFB3E5FC"
+                           FontSize="12"
+                           Margin="8,0,0,0"
+                           Visibility="Collapsed"
+                           HorizontalAlignment="Right"
+                           DockPanel.Dock="Right" />
             </DockPanel>
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -44,6 +52,13 @@
                            FontSize="14"
                            TextAlignment="Center" />
             </Border>
+
+            <ResizeGrip x:Name="ResizeGripControl"
+                        Grid.Row="1"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,-12,-12"
+                        Visibility="Collapsed" />
         </Grid>
     </Border>
 </Window>

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -14,6 +15,7 @@ namespace Fellowship_overlay;
 public partial class OverlayWindow : Window
 {
     private OverlaySettings _settings;
+    private bool _isLocked = true;
 
     public OverlayWindow(OverlaySettings settings)
     {
@@ -25,7 +27,7 @@ public partial class OverlayWindow : Window
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
-        MakeClickThrough(true);
+        MakeClickThrough(_isLocked);
     }
 
     public void ApplySettings(OverlaySettings settings)
@@ -41,6 +43,19 @@ public partial class OverlayWindow : Window
         Width = settings.Width;
         Height = settings.Height;
         Opacity = settings.Opacity;
+    }
+
+    public void SetLockState(bool locked)
+    {
+        _isLocked = locked;
+        if (IsLoaded)
+        {
+            MakeClickThrough(locked);
+        }
+
+        MoveHintTextBlock.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
+        ResizeGripControl.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
+        Cursor = locked ? System.Windows.Input.Cursors.Arrow : System.Windows.Input.Cursors.SizeAll;
     }
 
     public void SetStatus(string? message)
@@ -182,10 +197,56 @@ public partial class OverlayWindow : Window
         }
         else
         {
+            style |= NativeMethods.WS_EX_TOOLWINDOW;
             style &= ~NativeMethods.WS_EX_TRANSPARENT;
         }
 
         NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, style);
+    }
+
+    private void OnOverlayMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (_isLocked) return;
+        if (e.LeftButton == MouseButtonState.Pressed)
+        {
+            if (IsWithinResizeGrip(e.OriginalSource))
+            {
+                return;
+            }
+            try
+            {
+                DragMove();
+            }
+            catch
+            {
+                // ignored - DragMove may throw if invoked during resize
+            }
+        }
+    }
+
+    private bool IsWithinResizeGrip(object? source)
+    {
+        if (ResizeGripControl.Visibility != Visibility.Visible)
+        {
+            return false;
+        }
+
+        if (source is not DependencyObject current)
+        {
+            return false;
+        }
+
+        while (current != null)
+        {
+            if (ReferenceEquals(current, ResizeGripControl))
+            {
+                return true;
+            }
+
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return false;
     }
 
     private static class NativeMethods

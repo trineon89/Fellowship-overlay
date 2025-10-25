@@ -20,6 +20,7 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        Controller?.SaveSettings();
         Controller?.Dispose();
         base.OnExit(e);
     }

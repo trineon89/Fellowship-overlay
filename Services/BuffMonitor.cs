@@ -10,11 +10,12 @@ public sealed class BuffMonitor : IDisposable
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private readonly string _playerName;
     private readonly string? _playerGuid;
+    private IDebugLog? _debug;
 
     public event Action<AuraEvent>? Aura;
     public event Action<DateTimeOffset>? Tick;
 
-    public BuffMonitor(string logDirectory, string playerName, string? playerGuid)
+    public BuffMonitor(string logDirectory, string playerName, string? playerGuid, IDebugLog? debugLog = null)
     {
         _playerName = playerName;
         _playerGuid = playerGuid;
@@ -22,6 +23,7 @@ public sealed class BuffMonitor : IDisposable
         _watcher.Line += OnLine;
         _timer.Tick += OnTimerTick;
         _timer.Start();
+        _debug = debugLog;
     }
 
     private void OnTimerTick(object? sender, EventArgs e) => OnTick();
@@ -34,11 +36,18 @@ public sealed class BuffMonitor : IDisposable
 
     private void OnLine(string line)
     {
+        _debug?.Log(DateTimeOffset.Now, "log", line);
         var ev = LineParser.TryParseAura(line, _playerName, _playerGuid);
         if (ev != null)
         {
+            _debug?.Log(ev.Timestamp, "aura", $"{ev.Type}: {ev.SpellName} (#{ev.SpellId}) x{ev.Stacks} for {ev.DurationSeconds:F1}s");
             Aura?.Invoke(ev);
         }
+    }
+
+    public void SetDebugLog(IDebugLog? debugLog)
+    {
+        _debug = debugLog;
     }
 
     public void Dispose()

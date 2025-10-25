@@ -33,7 +33,7 @@ namespace Fellowship_overlay.Core
         {
             CloseCurrent();
             var newest = new DirectoryInfo(_logDir)
-                .GetFiles("*.log")
+                .GetFiles("*.txt")
                 .OrderByDescending(f => f.LastWriteTimeUtc)
                 .FirstOrDefault();
             if (newest == null) return;

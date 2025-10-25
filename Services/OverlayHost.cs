@@ -13,20 +13,26 @@ public sealed class OverlayHost : IDisposable
     private readonly BuffStore _store = new();
     private readonly HashSet<int> _trackedSpellIds;
     private readonly Dictionary<int, int> _orderLookup;
+    private readonly Action<OverlaySettings>? _onSettingsChanged;
+    private bool _applyingSettings;
     private BuffMonitor? _monitor;
 
     public Guid Id => _settings.Id;
 
-    public OverlayHost(OverlaySettings settings)
+    public OverlayHost(OverlaySettings settings, bool locked, Action<OverlaySettings>? onSettingsChanged)
     {
         _settings = settings;
         _trackedSpellIds = new HashSet<int>(settings.TrackedSpellIds);
         _orderLookup = settings.TrackedSpellIds
             .Select((spellId, index) => (spellId, index))
             .ToDictionary(pair => pair.spellId, pair => pair.index);
+        _onSettingsChanged = onSettingsChanged;
 
         _window = new OverlayWindow(settings);
         _window.Show();
+        _window.SetLockState(locked);
+        _window.LocationChanged += OnWindowLocationChanged;
+        _window.SizeChanged += OnWindowSizeChanged;
     }
 
     public void AttachMonitor(BuffMonitor monitor)
@@ -71,7 +77,15 @@ public sealed class OverlayHost : IDisposable
 
     public void UpdateFromSettings()
     {
-        _window.ApplySettings(_settings);
+        _applyingSettings = true;
+        try
+        {
+            _window.ApplySettings(_settings);
+        }
+        finally
+        {
+            _applyingSettings = false;
+        }
         _trackedSpellIds.Clear();
         _trackedSpellIds.UnionWith(_settings.TrackedSpellIds);
         _orderLookup.Clear();
@@ -92,6 +106,11 @@ public sealed class OverlayHost : IDisposable
 
     public void SetStatus(string? message) => System.Windows.Application.Current.Dispatcher.Invoke(() => _window.SetStatus(message));
 
+    public void SetLocked(bool locked)
+    {
+        System.Windows.Application.Current.Dispatcher.Invoke(() => _window.SetLockState(locked));
+    }
+
     private void ClearStore()
     {
         foreach (var buff in _store.Snapshot())
@@ -100,9 +119,27 @@ public sealed class OverlayHost : IDisposable
         }
     }
 
+    private void OnWindowLocationChanged(object? sender, EventArgs e)
+    {
+        if (_applyingSettings) return;
+        _settings.Left = _window.Left;
+        _settings.Top = _window.Top;
+        _onSettingsChanged?.Invoke(_settings);
+    }
+
+    private void OnWindowSizeChanged(object? sender, SizeChangedEventArgs e)
+    {
+        if (_applyingSettings) return;
+        _settings.Width = e.NewSize.Width;
+        _settings.Height = e.NewSize.Height;
+        _onSettingsChanged?.Invoke(_settings);
+    }
+
     public void Dispose()
     {
         DetachMonitor();
+        _window.LocationChanged -= OnWindowLocationChanged;
+        _window.SizeChanged -= OnWindowSizeChanged;
         _window.Close();
     }
 }

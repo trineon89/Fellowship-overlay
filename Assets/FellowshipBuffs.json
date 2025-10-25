@@ -1,0 +1,39 @@
+{
+  "buffs": [
+    {
+      "spellId": 1512,
+      "name": "Resonance of Earth",
+      "icon": "Icon.Buff.ResonanceOfEarth",
+      "category": "Earthsong Harmonies"
+    },
+    {
+      "spellId": 1574,
+      "name": "Stone Shield",
+      "icon": "Icon.Buff.StoneShield",
+      "category": "Earthsong Harmonies"
+    },
+    {
+      "spellId": 2164,
+      "name": "Hidden Power",
+      "icon": "Icon.Buff.HiddenPower",
+      "category": "Empowerments"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Earthwarden Core",
+      "description": "Stone Shield and Resonance of Earth from the Earthwarden toolkit.",
+      "spellIds": [
+        1574,
+        1512
+      ]
+    },
+    {
+      "name": "Empowerments",
+      "description": "Offensive empowerments that define burst windows.",
+      "spellIds": [
+        2164
+      ]
+    }
+  ]
+}

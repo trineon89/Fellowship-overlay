@@ -17,6 +17,8 @@ public partial class SettingsWindow : Window
     private readonly AppController _controller;
     private OverlaySettings? _selectedOverlay;
     private bool _suppressBuffEvents;
+    private bool _suppressOverlayEvents;
+    private bool _suppressGeneralEvents;
     private static readonly Regex NumericRegex = new(@"^[0-9.\-]+$");
 
     public SettingsWindow(AppController controller)
@@ -28,6 +30,9 @@ public partial class SettingsWindow : Window
         BuffsItemsControl.ItemsSource = BuffCatalog.Buffs;
 
         LoadSettings();
+        _controller.OverlaySettingsChanged += OnControllerOverlaySettingsChanged;
+        _controller.DebugEnabledChanged += OnDebugEnabledChanged;
+        Loaded += OnSettingsWindowLoaded;
     }
 
     private void LoadSettings()
@@ -41,6 +46,11 @@ public partial class SettingsWindow : Window
         {
             OverlayListBox.SelectedIndex = 0;
         }
+
+        _suppressGeneralEvents = true;
+        LockOverlaysCheckBox.IsChecked = _controller.Settings.OverlaysLocked;
+        EnableDebugCheckBox.IsChecked = _controller.Settings.DebugEnabled;
+        _suppressGeneralEvents = false;
 
         RefreshStatus();
     }
@@ -81,6 +91,14 @@ public partial class SettingsWindow : Window
         _controller.SaveSettings();
         RefreshStatus();
         System.Windows.MessageBox.Show(this, "Settings saved.", "Fellowship Overlay", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void OnSettingsWindowLoaded(object sender, RoutedEventArgs e)
+    {
+        if (_controller.Settings.DebugEnabled)
+        {
+            _controller.SetDebugEnabled(true, this);
+        }
     }
 
     private void OnOverlaySelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -187,6 +205,7 @@ public partial class SettingsWindow : Window
 
     private void OnOverlayPositionChanged(object sender, RoutedEventArgs e)
     {
+        if (_suppressOverlayEvents) return;
         if (_selectedOverlay == null) return;
         if (double.TryParse(OverlayLeftTextBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var left))
         {
@@ -203,6 +222,7 @@ public partial class SettingsWindow : Window
 
     private void OnOverlaySizeChanged(object sender, RoutedEventArgs e)
     {
+        if (_suppressOverlayEvents) return;
         if (_selectedOverlay == null) return;
         if (double.TryParse(OverlayWidthTextBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var width))
         {
@@ -242,5 +262,67 @@ public partial class SettingsWindow : Window
     private void OnNumericTextInput(object sender, TextCompositionEventArgs e)
     {
         e.Handled = !NumericRegex.IsMatch(e.Text);
+    }
+
+    private void OnLockOverlaysChanged(object sender, RoutedEventArgs e)
+    {
+        if (_suppressGeneralEvents) return;
+        _controller.SetOverlaysLocked(LockOverlaysCheckBox.IsChecked == true);
+        _controller.SaveSettings();
+    }
+
+    private void OnDebugModeChanged(object sender, RoutedEventArgs e)
+    {
+        if (_suppressGeneralEvents) return;
+        _controller.SetDebugEnabled(EnableDebugCheckBox.IsChecked == true, this);
+        _controller.SaveSettings();
+    }
+
+    private void OnControllerOverlaySettingsChanged(object? sender, OverlaySettings e)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.Invoke(() => OnControllerOverlaySettingsChanged(sender, e));
+            return;
+        }
+
+        if (_selectedOverlay == null || e.Id != _selectedOverlay.Id)
+        {
+            return;
+        }
+
+        _suppressOverlayEvents = true;
+        try
+        {
+            OverlayLeftTextBox.Text = e.Left.ToString("F0", CultureInfo.InvariantCulture);
+            OverlayTopTextBox.Text = e.Top.ToString("F0", CultureInfo.InvariantCulture);
+            OverlayWidthTextBox.Text = e.Width.ToString("F0", CultureInfo.InvariantCulture);
+            OverlayHeightTextBox.Text = e.Height.ToString("F0", CultureInfo.InvariantCulture);
+        }
+        finally
+        {
+            _suppressOverlayEvents = false;
+        }
+    }
+
+    private void OnDebugEnabledChanged(object? sender, bool enabled)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.Invoke(() => OnDebugEnabledChanged(sender, enabled));
+            return;
+        }
+
+        _suppressGeneralEvents = true;
+        EnableDebugCheckBox.IsChecked = enabled;
+        _suppressGeneralEvents = false;
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _controller.OverlaySettingsChanged -= OnControllerOverlaySettingsChanged;
+        _controller.DebugEnabledChanged -= OnDebugEnabledChanged;
+        base.OnClosed(e);
+        System.Windows.Application.Current.Shutdown();
     }
 }

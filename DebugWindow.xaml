@@ -1,0 +1,47 @@
+<Window x:Class="Fellowship_overlay.DebugWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Fellowship Overlay Debug"
+        Width="760"
+        Height="480"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        MinHeight="360"
+        MinWidth="600">
+    <DockPanel Margin="12">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,12">
+            <TextBlock Text="Debug output"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center" />
+            <Button Content="Clear"
+                    Margin="16,0,0,0"
+                    Padding="16,4"
+                    Click="OnClear" />
+        </StackPanel>
+
+        <Border BorderThickness="1"
+                BorderBrush="#33222222"
+                CornerRadius="8"
+                Padding="0">
+            <ListView x:Name="LogListView"
+                      ItemsSource="{Binding Entries}"
+                      BorderThickness="0"
+                      Background="Transparent">
+                <ListView.View>
+                    <GridView AllowsColumnReorder="False">
+                        <GridViewColumn Header="Time"
+                                        Width="110"
+                                        DisplayMemberBinding="{Binding TimeDisplay}" />
+                        <GridViewColumn Header="Source"
+                                        Width="140"
+                                        DisplayMemberBinding="{Binding Source}" />
+                        <GridViewColumn Header="Message"
+                                        Width="480"
+                                        DisplayMemberBinding="{Binding Message}" />
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
+    </DockPanel>
+</Window>

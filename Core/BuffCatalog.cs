@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 namespace Fellowship_overlay.Core;
 
@@ -10,36 +13,102 @@ public sealed record BuffPreset(string Name, string Description, IReadOnlyList<i
 
 public static class BuffCatalog
 {
-    private static readonly BuffDefinition[] _buffs =
-    {
-        new(21562, "Power Word: Fortitude", "Icon.Buff.Fortitude", "Raid Buff"),
-        new(6673, "Battle Shout", "Icon.Buff.BattleShout", "Raid Buff"),
-        new(1459, "Arcane Intellect", "Icon.Buff.ArcaneIntellect", "Raid Buff"),
-        new(97462, "Rallying Cry", "Icon.Buff.RallyingCry", "Raid Cooldown"),
-        new(31821, "Devotion Aura", "Icon.Buff.DevotionAura", "Raid Cooldown"),
-        new(62618, "Power Word: Barrier", "Icon.Buff.PowerWordBarrier", "Raid Cooldown"),
-        new(1022, "Blessing of Protection", "Icon.Buff.BlessingOfProtection", "External Cooldown"),
-        new(6940, "Blessing of Sacrifice", "Icon.Buff.BlessingOfSacrifice", "External Cooldown"),
-        new(33206, "Pain Suppression", "Icon.Buff.PainSuppression", "External Cooldown"),
-        new(47788, "Guardian Spirit", "Icon.Buff.GuardianSpirit", "External Cooldown"),
-        new(102342, "Ironbark", "Icon.Buff.Ironbark", "External Cooldown"),
-        new(116849, "Life Cocoon", "Icon.Buff.LifeCocoon", "External Cooldown"),
-    };
+    private static readonly Lazy<CatalogData> _data = new(LoadCatalog);
 
-    private static readonly IReadOnlyDictionary<int, BuffDefinition> _byId =
-        new ReadOnlyDictionary<int, BuffDefinition>(_buffs.ToDictionary(b => b.SpellId));
+    public static IReadOnlyList<BuffDefinition> Buffs => _data.Value.Buffs;
 
-    private static readonly BuffPreset[] _presets =
-    {
-        new("Raid Buffs", "Fortitude, Battle Shout, and Arcane Intellect", new [] { 21562, 6673, 1459 }),
-        new("External Cooldowns", "Defensive externals you can receive", new [] { 1022, 6940, 33206, 47788, 102342, 116849 }),
-        new("Raid CDs", "Teamwide raid cooldowns", new [] { 97462, 31821, 62618 }),
-    };
-
-    public static IReadOnlyList<BuffDefinition> Buffs => _buffs;
-
-    public static IReadOnlyList<BuffPreset> Presets => _presets;
+    public static IReadOnlyList<BuffPreset> Presets => _data.Value.Presets;
 
     public static bool TryGet(int spellId, out BuffDefinition? definition)
-        => _byId.TryGetValue(spellId, out definition);
+        => _data.Value.ById.TryGetValue(spellId, out definition);
+
+    private static CatalogData LoadCatalog()
+    {
+        try
+        {
+            var path = Path.Combine(AppContext.BaseDirectory, "Assets", "FellowshipBuffs.json");
+            if (File.Exists(path))
+            {
+                var json = File.ReadAllText(path);
+                var doc = JsonSerializer.Deserialize<BuffCatalogDocument>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    ReadCommentHandling = JsonCommentHandling.Skip,
+                    AllowTrailingCommas = true
+                });
+
+                if (doc != null && doc.Buffs?.Any() == true)
+                {
+                    var buffs = doc.Buffs
+                        .Where(b => b.SpellId > 0 && !string.IsNullOrWhiteSpace(b.Name))
+                        .Select(b => new BuffDefinition(b.SpellId, b.Name.Trim(), b.Icon ?? string.Empty, b.Category ?? string.Empty))
+                        .ToArray();
+
+                    var presets = doc.Presets?.Select(p => new BuffPreset(
+                        p.Name?.Trim() ?? string.Empty,
+                        p.Description?.Trim() ?? string.Empty,
+                        (p.SpellIds ?? new List<int>()).Where(id => id > 0).Distinct().ToArray()))
+                    .Where(p => !string.IsNullOrWhiteSpace(p.Name))
+                    .ToArray() ?? Array.Empty<BuffPreset>();
+
+                    if (buffs.Length > 0)
+                    {
+                        return CatalogData.From(buffs, presets.Length > 0 ? presets : DefaultPresets);
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // fall back to defaults
+        }
+
+        return CatalogData.From(DefaultBuffs, DefaultPresets);
+    }
+
+    private static readonly BuffDefinition[] DefaultBuffs =
+    {
+        new(1512, "Resonance of Earth", "Icon.Buff.ResonanceOfEarth", "Earthsong Harmonies"),
+        new(1574, "Stone Shield", "Icon.Buff.StoneShield", "Earthsong Harmonies"),
+        new(2164, "Hidden Power", "Icon.Buff.HiddenPower", "Empowerments"),
+    };
+
+    private static readonly BuffPreset[] DefaultPresets =
+    {
+        new("Earthwarden Core", "Stone Shield and Resonance of Earth from the Earthwarden toolkit.", new [] { 1574, 1512 }),
+        new("Empowerments", "Offensive empowerments that define burst windows.", new [] { 2164 })
+    };
+
+    private sealed record CatalogData(
+        IReadOnlyList<BuffDefinition> Buffs,
+        IReadOnlyList<BuffPreset> Presets,
+        IReadOnlyDictionary<int, BuffDefinition> ById)
+    {
+        public static CatalogData From(IReadOnlyList<BuffDefinition> buffs, IReadOnlyList<BuffPreset> presets)
+        {
+            var dict = new ReadOnlyDictionary<int, BuffDefinition>(buffs.ToDictionary(b => b.SpellId));
+            return new CatalogData(buffs, presets, dict);
+        }
+    }
+
+    private sealed class BuffCatalogDocument
+    {
+        public List<BuffDocument>? Buffs { get; set; }
+        public List<PresetDocument>? Presets { get; set; }
+    }
+
+    private sealed class BuffDocument
+    {
+        public int SpellId { get; set; }
+        public string? Name { get; set; }
+        public string? Icon { get; set; }
+        public string? Category { get; set; }
+    }
+
+    private sealed class PresetDocument
+    {
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public List<int>? SpellIds { get; set; }
+    }
 }

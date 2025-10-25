@@ -61,6 +61,19 @@
                          MinWidth="200"
                          VerticalContentAlignment="Center" />
             </Grid>
+			
+            <CheckBox x:Name="LockOverlaysCheckBox"
+                      Content="Lock overlays in place (click-through mode)"
+                      Margin="0,12,0,0"
+                      Checked="OnLockOverlaysChanged"
+                      Unchecked="OnLockOverlaysChanged" />
+
+            <CheckBox x:Name="EnableDebugCheckBox"
+                      Content="Enable debug window"
+                      Margin="0,4,0,0"
+                      Checked="OnDebugModeChanged"
+                      Unchecked="OnDebugModeChanged" />
+					  
         </StackPanel>
 
         <Grid Grid.Row="1">
