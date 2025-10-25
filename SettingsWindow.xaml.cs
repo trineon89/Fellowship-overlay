@@ -120,6 +120,7 @@ public partial class SettingsWindow : Window
                 OverlayWidthTextBox.Text = string.Empty;
                 OverlayHeightTextBox.Text = string.Empty;
                 ShowIconsOnlyCheckBox.IsChecked = false;
+				BuffAreaTextBlock.Text = "Not set";
                 SetBuffChecks(Array.Empty<int>());
                 return;
             }
@@ -130,6 +131,7 @@ public partial class SettingsWindow : Window
             OverlayWidthTextBox.Text = _selectedOverlay.Width.ToString("F0", CultureInfo.InvariantCulture);
             OverlayHeightTextBox.Text = _selectedOverlay.Height.ToString("F0", CultureInfo.InvariantCulture);
             ShowIconsOnlyCheckBox.IsChecked = _selectedOverlay.ShowIconsOnly;
+			UpdateBuffAreaText();
             SetBuffChecks(_selectedOverlay.TrackedSpellIds);
         }
         finally
@@ -254,6 +256,44 @@ public partial class SettingsWindow : Window
         _selectedOverlay.ShowIconsOnly = ShowIconsOnlyCheckBox.IsChecked == true;
         _controller.UpdateOverlay(_selectedOverlay);
     }
+	
+	private void UpdateBuffAreaText()
+    {
+        if (_selectedOverlay?.BuffCaptureRegion is { } region && region.IsValid)
+        {
+            BuffAreaTextBlock.Text = $"{region.Left:F0},{region.Top:F0} — {region.Width:F0}×{region.Height:F0}";
+        }
+        else
+        {
+            BuffAreaTextBlock.Text = "Not set";
+        }
+    }
+
+    private void OnCastBuffArea(object sender, RoutedEventArgs e)
+    {
+        if (_selectedOverlay == null)
+        {
+            return;
+        }
+
+        var selector = new CaptureRegionWindow
+        {
+            Owner = this
+        };
+
+        if (selector.ShowDialog() == true && selector.SelectedRegion is { } rect)
+        {
+            _selectedOverlay.BuffCaptureRegion = new CaptureRegionSettings
+            {
+                Left = rect.X,
+                Top = rect.Y,
+                Width = rect.Width,
+                Height = rect.Height
+            };
+            UpdateBuffAreaText();
+            _controller.UpdateOverlay(_selectedOverlay);
+        }
+    }
 
     private void OnBuffSelectionChanged(object sender, RoutedEventArgs e)
     {
@@ -317,6 +357,7 @@ public partial class SettingsWindow : Window
             OverlayWidthTextBox.Text = e.Width.ToString("F0", CultureInfo.InvariantCulture);
             OverlayHeightTextBox.Text = e.Height.ToString("F0", CultureInfo.InvariantCulture);
 			ShowIconsOnlyCheckBox.IsChecked = e.ShowIconsOnly;
+            UpdateBuffAreaText();
         }
         finally
         {

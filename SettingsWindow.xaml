@@ -200,6 +200,27 @@
                                   Margin="0,12,0,0"
                                   Checked="OnOverlayDisplayModeChanged"
                                   Unchecked="OnOverlayDisplayModeChanged" />
+								  
+								  <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Buff area"
+                                       VerticalAlignment="Center" />
+                            <TextBlock x:Name="BuffAreaTextBlock"
+                                       Grid.Column="1"
+                                       Margin="12,0"
+                                       VerticalAlignment="Center"
+                                       Foreground="Gray"
+                                       Text="Not set" />
+                            <Button Grid.Column="2"
+                                    Content="Cast buff area"
+                                    Padding="16,4"
+                                    Click="OnCastBuffArea" />
+                        </Grid>
                     </StackPanel>
 
                     <StackPanel Grid.Row="1" Margin="0,12,0,0">

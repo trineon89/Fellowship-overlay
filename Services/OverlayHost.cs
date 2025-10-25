@@ -18,6 +18,8 @@ public sealed class OverlayHost : IDisposable
     private BuffMonitor? _monitor;
 	private (Buff Buff, BuffDefinition? Definition)[] _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
     private DateTimeOffset _lastUpdateTimestamp = DateTimeOffset.Now;
+	private bool _screenCaptureActive;
+    private readonly object _stateLock = new();
 
     public Guid Id => _settings.Id;
 
@@ -29,6 +31,8 @@ public sealed class OverlayHost : IDisposable
             .Select((spellId, index) => (spellId, index))
             .ToDictionary(pair => pair.spellId, pair => pair.index);
         _onSettingsChanged = onSettingsChanged;
+		
+		_screenCaptureActive = settings.BuffCaptureRegion?.IsValid == true;
 
         _window = new OverlayWindow(settings);
         _window.Show();
@@ -54,35 +58,55 @@ public sealed class OverlayHost : IDisposable
         _monitor.Tick -= OnTick;
         _monitor = null;
         ClearStore();
-        _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
-        _lastUpdateTimestamp = DateTimeOffset.Now;
-        System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(Array.Empty<(Buff, BuffDefinition?)>(), _lastUpdateTimestamp));
     }
 
     private void OnAura(AuraEvent e)
     {
-        if (!_trackedSpellIds.Contains(e.SpellId)) return;
+		bool screenCaptureActive;
+        bool tracked;
+        lock (_stateLock)
+        {
+            screenCaptureActive = _screenCaptureActive;
+            tracked = _trackedSpellIds.Contains(e.SpellId);
+        }
+        if (screenCaptureActive) return;
+        if (!tracked) return;
         _store.Apply(e);
     }
 
     private void OnTick(DateTimeOffset now)
     {
+		bool screenCaptureActive;
+        Dictionary<int, int> orderLookupSnapshot;
+        lock (_stateLock)
+        {
+            screenCaptureActive = _screenCaptureActive;
+            orderLookupSnapshot = new Dictionary<int, int>(_orderLookup);
+        }
+        if (screenCaptureActive)
+        {
+            return;
+        }
         _store.Prune(now);
         var snapshot = _store.Snapshot();
         var ordered = snapshot
-            .OrderBy(b => _orderLookup.TryGetValue(b.SpellId, out var index) ? index : int.MaxValue)
+            .OrderBy(b => orderLookupSnapshot.TryGetValue(b.SpellId, out var index) ? index : int.MaxValue)
             .ThenBy(b => (b.ExpiresAt ?? now).ToUnixTimeMilliseconds())
             .Select(b => (b, BuffCatalog.TryGet(b.SpellId, out var def) ? def : null))
             .ToArray();
 
         var nowSnapshot = now;
-		_lastBuffs = ordered;
-        _lastUpdateTimestamp = nowSnapshot;
+		lock (_stateLock)
+        {
+            _lastBuffs = ordered;
+            _lastUpdateTimestamp = nowSnapshot;
+        }
         System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(ordered, nowSnapshot));
     }
 
     public void UpdateFromSettings()
     {
+		var wasScreenCaptureActive = _screenCaptureActive;
         _applyingSettings = true;
         try
         {
@@ -92,20 +116,45 @@ public sealed class OverlayHost : IDisposable
         {
             _applyingSettings = false;
         }
-        _trackedSpellIds.Clear();
-        _trackedSpellIds.UnionWith(_settings.TrackedSpellIds);
-        _orderLookup.Clear();
-        foreach (var (spellId, index) in _settings.TrackedSpellIds.Select((id, i) => (id, i)))
+        bool screenCaptureChanged;
+        (Buff Buff, BuffDefinition? Definition)[] snapshot;
+        DateTimeOffset timestamp;
+        lock (_stateLock)
         {
-            _orderLookup[spellId] = index;
+            _trackedSpellIds.Clear();
+            _trackedSpellIds.UnionWith(_settings.TrackedSpellIds);
+            _orderLookup.Clear();
+            foreach (var (spellId, index) in _settings.TrackedSpellIds.Select((id, i) => (id, i)))
+            {
+                _orderLookup[spellId] = index;
+            }
+
+            _screenCaptureActive = _settings.BuffCaptureRegion?.IsValid == true;
+            screenCaptureChanged = _screenCaptureActive != wasScreenCaptureActive;
+            snapshot = _lastBuffs;
+            timestamp = _lastUpdateTimestamp == DateTimeOffset.MinValue ? DateTimeOffset.Now : _lastUpdateTimestamp;
         }
-		var timestamp = _lastUpdateTimestamp == DateTimeOffset.MinValue ? DateTimeOffset.Now : _lastUpdateTimestamp;
-        System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(_lastBuffs, timestamp));
+		if (screenCaptureChanged)
+        {
+            ClearStore();
+            lock (_stateLock)
+            {
+                snapshot = _lastBuffs;
+                timestamp = _lastUpdateTimestamp;
+            }
+        }
+
+        System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(snapshot, timestamp));
 
         // Remove buffs that are no longer tracked
+		HashSet<int> trackedSnapshot;
+        lock (_stateLock)
+        {
+            trackedSnapshot = new HashSet<int>(_trackedSpellIds);
+        }
         foreach (var buff in _store.Snapshot())
         {
-            if (!_trackedSpellIds.Contains(buff.SpellId))
+             if (!trackedSnapshot.Contains(buff.SpellId))
             {
                 _store.Apply(new AuraEvent(buff.AppliedAt, AuraEventType.Removed, "", "", buff.SpellId, buff.Name, 0, 0));
             }
@@ -125,8 +174,17 @@ public sealed class OverlayHost : IDisposable
         {
             _store.Apply(new AuraEvent(buff.AppliedAt, AuraEventType.Removed, "", "", buff.SpellId, buff.Name, 0, 0));
         }
-		_lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
-        _lastUpdateTimestamp = DateTimeOffset.Now;
+		(Buff Buff, BuffDefinition? Definition)[] snapshot;
+        DateTimeOffset timestamp;
+        lock (_stateLock)
+        {
+            _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
+            _lastUpdateTimestamp = DateTimeOffset.Now;
+            snapshot = _lastBuffs;
+            timestamp = _lastUpdateTimestamp;
+        }
+
+        System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(snapshot, timestamp));
     }
 
     private void OnWindowLocationChanged(object? sender, EventArgs e)
@@ -151,5 +209,76 @@ public sealed class OverlayHost : IDisposable
         _window.LocationChanged -= OnWindowLocationChanged;
         _window.SizeChanged -= OnWindowSizeChanged;
         _window.Close();
+    }
+	public void HandleInputActivity()
+    {
+        CaptureRegionSettings? regionCopy;
+        int[] trackedIds;
+        Dictionary<int, int> orderLookupSnapshot;
+
+        lock (_stateLock)
+        {
+            if (!_screenCaptureActive)
+            {
+                return;
+            }
+
+            var region = _settings.BuffCaptureRegion;
+            if (region == null || !region.IsValid)
+            {
+                return;
+            }
+
+            regionCopy = region.Clone();
+
+            trackedIds = _trackedSpellIds.ToArray();
+            orderLookupSnapshot = new Dictionary<int, int>(_orderLookup);
+        }
+
+        using var capture = ScreenCaptureService.Instance.Capture(regionCopy);
+        if (capture == null)
+        {
+            return;
+        }
+
+        var recognized = BuffIconRecognizer.Instance.Recognize(capture, trackedIds);
+        var now = DateTimeOffset.Now;
+        if (recognized.Count == 0)
+        {
+            lock (_stateLock)
+            {
+                _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
+                _lastUpdateTimestamp = now;
+            }
+            System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(Array.Empty<(Buff, BuffDefinition?)>(), now));
+            return;
+        }
+
+        var ordered = recognized
+            .OrderBy(r => orderLookupSnapshot.TryGetValue(r.Definition.SpellId, out var index) ? index : int.MaxValue)
+            .ThenBy(r => r.Definition.Name)
+            .ToArray();
+
+        var mapped = ordered
+            .Select(r =>
+            {
+                var buff = new Buff
+                {
+                    SpellId = r.Definition.SpellId,
+                    Name = r.Definition.Name,
+                    Stacks = Math.Max(1, r.Stacks),
+                    AppliedAt = now,
+                    ExpiresAt = null
+                };
+                return (buff, (BuffDefinition?)r.Definition);
+            })
+            .ToArray();
+
+        lock (_stateLock)
+        {
+            _lastBuffs = mapped;
+            _lastUpdateTimestamp = now;
+        }
+        System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(mapped, now));
     }
 }

@@ -1,0 +1,34 @@
+<Window x:Class="Fellowship_overlay.CaptureRegionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="#66000000"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ResizeMode="NoResize"
+        WindowStartupLocation="Manual"
+        Width="800"
+        Height="600"
+        KeyDown="OnWindowKeyDown"
+        MouseLeftButtonDown="OnMouseDown"
+        MouseMove="OnMouseMove"
+        MouseLeftButtonUp="OnMouseUp">
+    <Grid>
+        <TextBlock Text="Click and drag to select the buff area. Press Esc to cancel."
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Top"
+                   Margin="0,24,0,0"
+                   Foreground="White"
+                   FontWeight="SemiBold"
+                   FontSize="18"
+                   TextOptions.TextFormattingMode="Display" />
+        <Canvas x:Name="SelectionCanvas">
+            <Rectangle x:Name="SelectionRectangle"
+                       Stroke="#FF29B6F6"
+                       StrokeThickness="2"
+                       Fill="#4029B6F6"
+                       Visibility="Collapsed" />
+        </Canvas>
+    </Grid>
+</Window>
