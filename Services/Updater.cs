@@ -2,7 +2,7 @@ using NetSparkleUpdater;
 using NetSparkleUpdater.Enums;
 using NetSparkleUpdater.UI.WPF;
 
-namespace MeikoBuffOverlay.Services
+namespace Fellowship_overlay.Services
 {
     public static class Updater
     {
