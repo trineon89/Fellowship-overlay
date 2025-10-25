@@ -16,6 +16,8 @@ public sealed class OverlayHost : IDisposable
     private readonly Action<OverlaySettings>? _onSettingsChanged;
     private bool _applyingSettings;
     private BuffMonitor? _monitor;
+	private (Buff Buff, BuffDefinition? Definition)[] _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
+    private DateTimeOffset _lastUpdateTimestamp = DateTimeOffset.Now;
 
     public Guid Id => _settings.Id;
 
@@ -52,7 +54,9 @@ public sealed class OverlayHost : IDisposable
         _monitor.Tick -= OnTick;
         _monitor = null;
         ClearStore();
-        System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(Array.Empty<(Buff, BuffDefinition?)>(), DateTimeOffset.Now));
+        _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
+        _lastUpdateTimestamp = DateTimeOffset.Now;
+        System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(Array.Empty<(Buff, BuffDefinition?)>(), _lastUpdateTimestamp));
     }
 
     private void OnAura(AuraEvent e)
@@ -72,6 +76,8 @@ public sealed class OverlayHost : IDisposable
             .ToArray();
 
         var nowSnapshot = now;
+		_lastBuffs = ordered;
+        _lastUpdateTimestamp = nowSnapshot;
         System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(ordered, nowSnapshot));
     }
 
@@ -93,6 +99,8 @@ public sealed class OverlayHost : IDisposable
         {
             _orderLookup[spellId] = index;
         }
+		var timestamp = _lastUpdateTimestamp == DateTimeOffset.MinValue ? DateTimeOffset.Now : _lastUpdateTimestamp;
+        System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(_lastBuffs, timestamp));
 
         // Remove buffs that are no longer tracked
         foreach (var buff in _store.Snapshot())
@@ -117,6 +125,8 @@ public sealed class OverlayHost : IDisposable
         {
             _store.Apply(new AuraEvent(buff.AppliedAt, AuraEventType.Removed, "", "", buff.SpellId, buff.Name, 0, 0));
         }
+		_lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
+        _lastUpdateTimestamp = DateTimeOffset.Now;
     }
 
     private void OnWindowLocationChanged(object? sender, EventArgs e)

@@ -24,4 +24,5 @@ public sealed class OverlaySettings
     public double Height { get; set; } = 260;
     public double Opacity { get; set; } = 0.85;
     public List<int> TrackedSpellIds { get; set; } = new();
+	public bool ShowIconsOnly { get; set; }
 }

@@ -109,23 +109,33 @@ public partial class SettingsWindow : Window
 
     private void UpdateOverlayDetails()
     {
-        if (_selectedOverlay == null)
+            _suppressOverlayEvents = true;
+        try
         {
-            OverlayNameTextBox.Text = string.Empty;
-            OverlayLeftTextBox.Text = string.Empty;
-            OverlayTopTextBox.Text = string.Empty;
-            OverlayWidthTextBox.Text = string.Empty;
-            OverlayHeightTextBox.Text = string.Empty;
-            SetBuffChecks(Array.Empty<int>());
-            return;
-        }
+            if (_selectedOverlay == null)
+            {
+                OverlayNameTextBox.Text = string.Empty;
+                OverlayLeftTextBox.Text = string.Empty;
+                OverlayTopTextBox.Text = string.Empty;
+                OverlayWidthTextBox.Text = string.Empty;
+                OverlayHeightTextBox.Text = string.Empty;
+                ShowIconsOnlyCheckBox.IsChecked = false;
+                SetBuffChecks(Array.Empty<int>());
+                return;
+            }
 
-        OverlayNameTextBox.Text = _selectedOverlay.Name;
-        OverlayLeftTextBox.Text = _selectedOverlay.Left.ToString("F0", CultureInfo.InvariantCulture);
-        OverlayTopTextBox.Text = _selectedOverlay.Top.ToString("F0", CultureInfo.InvariantCulture);
-        OverlayWidthTextBox.Text = _selectedOverlay.Width.ToString("F0", CultureInfo.InvariantCulture);
-        OverlayHeightTextBox.Text = _selectedOverlay.Height.ToString("F0", CultureInfo.InvariantCulture);
-        SetBuffChecks(_selectedOverlay.TrackedSpellIds);
+            OverlayNameTextBox.Text = _selectedOverlay.Name;
+            OverlayLeftTextBox.Text = _selectedOverlay.Left.ToString("F0", CultureInfo.InvariantCulture);
+            OverlayTopTextBox.Text = _selectedOverlay.Top.ToString("F0", CultureInfo.InvariantCulture);
+            OverlayWidthTextBox.Text = _selectedOverlay.Width.ToString("F0", CultureInfo.InvariantCulture);
+            OverlayHeightTextBox.Text = _selectedOverlay.Height.ToString("F0", CultureInfo.InvariantCulture);
+            ShowIconsOnlyCheckBox.IsChecked = _selectedOverlay.ShowIconsOnly;
+            SetBuffChecks(_selectedOverlay.TrackedSpellIds);
+        }
+        finally
+        {
+            _suppressOverlayEvents = false;
+        }
     }
 
     private void SetBuffChecks(IEnumerable<int> spellIds)
@@ -236,6 +246,14 @@ public partial class SettingsWindow : Window
 
         _controller.UpdateOverlay(_selectedOverlay);
     }
+	
+	private void OnOverlayDisplayModeChanged(object sender, RoutedEventArgs e)
+    {
+        if (_suppressOverlayEvents) return;
+        if (_selectedOverlay == null) return;
+        _selectedOverlay.ShowIconsOnly = ShowIconsOnlyCheckBox.IsChecked == true;
+        _controller.UpdateOverlay(_selectedOverlay);
+    }
 
     private void OnBuffSelectionChanged(object sender, RoutedEventArgs e)
     {
@@ -298,6 +316,7 @@ public partial class SettingsWindow : Window
             OverlayTopTextBox.Text = e.Top.ToString("F0", CultureInfo.InvariantCulture);
             OverlayWidthTextBox.Text = e.Width.ToString("F0", CultureInfo.InvariantCulture);
             OverlayHeightTextBox.Text = e.Height.ToString("F0", CultureInfo.InvariantCulture);
+			ShowIconsOnlyCheckBox.IsChecked = e.ShowIconsOnly;
         }
         finally
         {

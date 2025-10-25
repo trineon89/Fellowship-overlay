@@ -10,7 +10,11 @@
         Background="Transparent"
         ShowInTaskbar="False"
         ResizeMode="CanResizeWithGrip">
-    <Border Background="#CC000000" CornerRadius="12" Padding="12" MouseLeftButtonDown="OnOverlayMouseDown">
+    <Border x:Name="ChromeBorder"
+            Background="Transparent"
+            CornerRadius="12"
+            Padding="12"
+            MouseLeftButtonDown="OnOverlayMouseDown">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />

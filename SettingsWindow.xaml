@@ -83,8 +83,14 @@
             </Grid.ColumnDefinitions>
 
             <Border BorderBrush="#33222222" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,12,0">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Top">
+               <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
                         <TextBlock Text="Overlays" FontSize="18" FontWeight="SemiBold" />
                         <TextBlock x:Name="OverlayHintText"
                                    Text="Add overlays to track different buff sets."
@@ -92,11 +98,17 @@
                                    Margin="0,4,0,12" />
                     </StackPanel>
 
-                    <ListBox x:Name="OverlayListBox"
-                             DisplayMemberPath="Name"
-                             SelectionChanged="OnOverlaySelectionChanged" />
+                    <ScrollViewer Grid.Row="1"
+                                  Margin="0,0,0,12"
+                                  VerticalScrollBarVisibility="Auto">
+                        <ListBox x:Name="OverlayListBox"
+                                 MinHeight="140"
+                                 VerticalAlignment="Stretch"
+                                 DisplayMemberPath="Name"
+                                 SelectionChanged="OnOverlaySelectionChanged" />
+                    </ScrollViewer>
 
-                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,12,0,0">
+                    <StackPanel Grid.Row="2" Orientation="Horizontal">
                         <ComboBox x:Name="PresetComboBox"
                                   Width="150"
                                   Margin="0,0,8,0"
@@ -105,7 +117,7 @@
                         <Button Content="Add" Width="60" Click="OnAddOverlay" />
                         <Button Content="Remove" Width="70" Margin="8,0,0,0" Click="OnRemoveOverlay" />
                     </StackPanel>
-                </DockPanel>
+                </Grid>
             </Border>
 
             <Border Grid.Column="1" BorderBrush="#33222222" BorderThickness="1" CornerRadius="8" Padding="12">
@@ -182,6 +194,12 @@
                                      PreviewTextInput="OnNumericTextInput"
                                      LostFocus="OnOverlaySizeChanged" />
                         </Grid>
+						
+                        <CheckBox x:Name="ShowIconsOnlyCheckBox"
+                                  Content="Show icons only"
+                                  Margin="0,12,0,0"
+                                  Checked="OnOverlayDisplayModeChanged"
+                                  Unchecked="OnOverlayDisplayModeChanged" />
                     </StackPanel>
 
                     <StackPanel Grid.Row="1" Margin="0,12,0,0">

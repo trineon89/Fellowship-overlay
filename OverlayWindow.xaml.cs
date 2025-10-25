@@ -18,6 +18,13 @@ public partial class OverlayWindow : Window
 {
     private OverlaySettings _settings;
     private bool _isLocked = true;
+	private static readonly SolidColorBrush UnlockedBackgroundBrush;
+
+    static OverlayWindow()
+    {
+        UnlockedBackgroundBrush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0xCC, 0x00, 0x00, 0x00));
+        UnlockedBackgroundBrush.Freeze();
+    }
 
     public OverlayWindow(OverlaySettings settings)
     {
@@ -55,9 +62,10 @@ public partial class OverlayWindow : Window
             MakeClickThrough(locked);
         }
 
-        MoveHintTextBlock.Visibility = locked? Visibility.Collapsed : Visibility.Visible;
-        ResizeGripControl.Visibility = locked? Visibility.Collapsed : Visibility.Visible;
-    Cursor = locked? System.Windows.Input.Cursors.Arrow : System.Windows.Input.Cursors.SizeAll;
+        MoveHintTextBlock.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
+        ResizeGripControl.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
+        Cursor = locked ? System.Windows.Input.Cursors.Arrow : System.Windows.Input.Cursors.SizeAll;
+        ChromeBorder.Background = locked ? System.Windows.Media.Brushes.Transparent : UnlockedBackgroundBrush;
     }
 
     public void SetStatus(string? message)
@@ -78,18 +86,40 @@ public partial class OverlayWindow : Window
     {
         BuffPanel.Children.Clear();
 
+		if (_settings.ShowIconsOnly)
+        {
+            var iconWrap = new WrapPanel
+            {
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Left
+            };
+
+            foreach (var (buff, definition) in buffs)
+            {
+                var total = buff.ExpiresAt.HasValue ? buff.ExpiresAt.Value - buff.AppliedAt : (TimeSpan?)null;
+                var left = buff.ExpiresAt.HasValue ? buff.ExpiresAt.Value - now : (TimeSpan?)null;
+                var pct = CalculateFill(total, left);
+                var iconOnlyElement = CreateCooldownIcon(definition, buff, pct, total.HasValue, left, true);
+                iconOnlyElement.Margin = new Thickness(0, 0, 12, 12);
+                iconWrap.Children.Add(iconOnlyElement);
+            }
+
+            BuffPanel.Children.Add(iconWrap);
+            return;
+        }
+
         foreach (var (buff, definition) in buffs)
         {
             var total = buff.ExpiresAt.HasValue ? buff.ExpiresAt.Value - buff.AppliedAt : (TimeSpan?)null;
             var left = buff.ExpiresAt.HasValue ? buff.ExpiresAt.Value - now : (TimeSpan?)null;
             var pct = CalculateFill(total, left);
+			var detailsText = FormatDetails(buff, left);
 
             var row = new Grid { Margin = new Thickness(0, 0, 0, 12) };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-            var iconContainer = CreateCooldownIcon(definition, buff.Name, pct, total.HasValue);
-            row.Children.Add(iconContainer);
+            var iconElement = CreateCooldownIcon(definition, buff, pct, total.HasValue, left, false);
+            row.Children.Add(iconElement);
 
             var infoPanel = new StackPanel { Margin = new Thickness(12, 0, 0, 0) };
             Grid.SetColumn(infoPanel, 1);
@@ -106,7 +136,7 @@ public partial class OverlayWindow : Window
 
             var detailText = new TextBlock
             {
-                Text = FormatDetails(buff, left),
+                Text = detailsText,
                 Foreground = System.Windows.Media.Brushes.LightGray,
                 HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
                 FontSize = 12
@@ -119,7 +149,7 @@ public partial class OverlayWindow : Window
         }
     }
 
-    private UIElement CreateCooldownIcon(BuffDefinition? definition, string fallbackName, double pct, bool hasTimer)
+    private FrameworkElement CreateCooldownIcon(BuffDefinition? definition, Buff buff, double pct, bool hasTimer, TimeSpan? left, bool iconsOnly)
     {
         const double size = 56;
         const double ringThickness = 6;
@@ -131,6 +161,8 @@ public partial class OverlayWindow : Window
             HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
             VerticalAlignment = System.Windows.VerticalAlignment.Center
         };
+		
+		 var displayName = buff.Name;
 
         var halo = new Ellipse
         {
@@ -189,7 +221,7 @@ public partial class OverlayWindow : Window
         {
             iconBorder.Child = new TextBlock
             {
-                Text = string.IsNullOrEmpty(fallbackName) ? "?" : new string(fallbackName.Take(2).ToArray()).ToUpperInvariant(),
+                Text = string.IsNullOrEmpty(displayName) ? "?" : new string(displayName.Take(2).ToArray()).ToUpperInvariant(),
                 Foreground = System.Windows.Media.Brushes.White,
                 HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                 VerticalAlignment = System.Windows.VerticalAlignment.Center,
@@ -198,9 +230,68 @@ public partial class OverlayWindow : Window
         }
 
         grid.Children.Add(iconBorder);
+		var detailsText = FormatDetails(buff, left);
+        if (!string.IsNullOrWhiteSpace(detailsText))
+        {
+            grid.ToolTip = string.IsNullOrWhiteSpace(displayName) ? detailsText : $"{displayName}\n{detailsText}";
+        }
+        else if (!string.IsNullOrWhiteSpace(displayName))
+        {
+            grid.ToolTip = displayName;
+        }
+
+        if (iconsOnly)
+        {
+            if (buff.Stacks > 1)
+            {
+                var stackBadge = new Border
+                {
+                    Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(200, 30, 136, 229)),
+                    CornerRadius = new CornerRadius(6),
+                    Padding = new Thickness(4, 1, 4, 1),
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+                    VerticalAlignment = System.Windows.VerticalAlignment.Top,
+                    Margin = new Thickness(2),
+                    Effect = CreateTextShadow()
+                };
+                stackBadge.Child = new TextBlock
+                {
+                    Text = $"x{buff.Stacks}",
+                    Foreground = System.Windows.Media.Brushes.White,
+                    FontWeight = FontWeights.Bold,
+                    FontSize = 12
+                };
+                grid.Children.Add(stackBadge);
+            }
+
+            var timeText = left.HasValue
+                ? FormatTime(left.Value < TimeSpan.Zero ? TimeSpan.Zero : left.Value)
+                : "∞";
+            var timerBlock = new TextBlock
+            {
+                Text = timeText,
+                Foreground = System.Windows.Media.Brushes.White,
+                FontWeight = FontWeights.Bold,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalAlignment = System.Windows.VerticalAlignment.Bottom,
+                Margin = new Thickness(0, 0, 0, 4),
+                Effect = CreateTextShadow()
+            };
+            grid.Children.Add(timerBlock);
+        }
+
         return grid;
     }
+	
+	private static DropShadowEffect CreateTextShadow() => new()
+    {
+        Color = System.Windows.Media.Colors.Black,
+        BlurRadius = 6,
+        ShadowDepth = 0,
+        Opacity = 0.75
+    };
 
+	
     private static double CalculateFill(TimeSpan? total, TimeSpan? left)
     {
         if (!total.HasValue)
