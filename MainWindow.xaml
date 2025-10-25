@@ -3,8 +3,49 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Fellowship Overlay" Width="420" Height="260"
         Topmost="True" WindowStyle="None" AllowsTransparency="True"
-        Background="#33000000" ResizeMode="CanResizeWithGrip" >
-    <ScrollViewer Padding="8">
-        <StackPanel x:Name="BuffPanel" />
-    </ScrollViewer>
+        Background="#33000000" ResizeMode="CanResizeWithGrip">
+    <Grid>
+        <ScrollViewer Padding="8">
+            <StackPanel x:Name="BuffPanel" />
+        </ScrollViewer>
+
+        <Border x:Name="SetupOverlay"
+                Background="#BF000000"
+                Visibility="Collapsed">
+            <Border Background="#FF2B2B2B" Padding="16" CornerRadius="8">
+                <StackPanel Width="320">
+                    <TextBlock Text="Let's set up your Fellowship overlay." FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock x:Name="SetupMessageTextBlock"
+                               TextWrapping="Wrap"
+                               Foreground="LightGray" />
+
+                    <StackPanel Margin="0,12,0,0">
+                        <TextBlock Text="Combat-log folder" Margin="0,0,0,4" />
+                        <DockPanel>
+                            <TextBox x:Name="LogDirTextBox"
+                                     Margin="0,0,8,0"
+                                     MinWidth="200"
+                                     VerticalContentAlignment="Center" />
+                            <Button Content="Browse..."
+                                    Width="80"
+                                    Click="OnBrowseLogDir" />
+                        </DockPanel>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,12,0,0">
+                        <TextBlock Text="Character name" Margin="0,0,0,4" />
+                        <TextBox x:Name="PlayerNameTextBox" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,12,0,0">
+                        <TextBlock Text="Character GUID (optional)" Margin="0,0,0,4" />
+                        <TextBox x:Name="PlayerGuidTextBox" />
+                    </StackPanel>
+                    <TextBlock Margin="0,8,0,0" Text="You can usually leave GUID blank unless you have duplicate names." FontStyle="Italic" FontSize="11" Foreground="LightGray" />
+
+                    <Button Margin="0,16,0,0" Content="Save &amp; Start" HorizontalAlignment="Right" Width="110" Click="OnSaveSettings" />
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
 </Window>
