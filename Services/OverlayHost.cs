@@ -8,6 +8,8 @@ namespace Fellowship_overlay.Services;
 
 public sealed class OverlayHost : IDisposable
 {
+	private static readonly TimeSpan CaptureHoldDuration = TimeSpan.FromSeconds(1.5);
+	
     private readonly OverlaySettings _settings;
     private readonly OverlayWindow _window;
     private readonly BuffStore _store = new();
@@ -19,6 +21,7 @@ public sealed class OverlayHost : IDisposable
 	private (Buff Buff, BuffDefinition? Definition)[] _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
     private DateTimeOffset _lastUpdateTimestamp = DateTimeOffset.Now;
 	private bool _screenCaptureActive;
+    private DateTimeOffset _captureHoldUntil = DateTimeOffset.MinValue;
     private readonly object _stateLock = new();
 
     public Guid Id => _settings.Id;
@@ -62,14 +65,11 @@ public sealed class OverlayHost : IDisposable
 
     private void OnAura(AuraEvent e)
     {
-		bool screenCaptureActive;
         bool tracked;
         lock (_stateLock)
         {
-            screenCaptureActive = _screenCaptureActive;
             tracked = _trackedSpellIds.Contains(e.SpellId);
         }
-        if (screenCaptureActive) return;
         if (!tracked) return;
         _store.Apply(e);
     }
@@ -77,13 +77,15 @@ public sealed class OverlayHost : IDisposable
     private void OnTick(DateTimeOffset now)
     {
 		bool screenCaptureActive;
+        DateTimeOffset captureHoldUntil;
         Dictionary<int, int> orderLookupSnapshot;
         lock (_stateLock)
         {
             screenCaptureActive = _screenCaptureActive;
+			captureHoldUntil = _captureHoldUntil;
             orderLookupSnapshot = new Dictionary<int, int>(_orderLookup);
         }
-        if (screenCaptureActive)
+        if (screenCaptureActive && now <= captureHoldUntil)
         {
             return;
         }
@@ -131,6 +133,10 @@ public sealed class OverlayHost : IDisposable
 
             _screenCaptureActive = _settings.BuffCaptureRegion?.IsValid == true;
             screenCaptureChanged = _screenCaptureActive != wasScreenCaptureActive;
+			if (!_screenCaptureActive)
+            {
+                _captureHoldUntil = DateTimeOffset.MinValue;
+            }
             snapshot = _lastBuffs;
             timestamp = _lastUpdateTimestamp == DateTimeOffset.MinValue ? DateTimeOffset.Now : _lastUpdateTimestamp;
         }
@@ -154,7 +160,7 @@ public sealed class OverlayHost : IDisposable
         }
         foreach (var buff in _store.Snapshot())
         {
-             if (!trackedSnapshot.Contains(buff.SpellId))
+            if (!trackedSnapshot.Contains(buff.SpellId))
             {
                 _store.Apply(new AuraEvent(buff.AppliedAt, AuraEventType.Removed, "", "", buff.SpellId, buff.Name, 0, 0));
             }
@@ -180,6 +186,7 @@ public sealed class OverlayHost : IDisposable
         {
             _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
             _lastUpdateTimestamp = DateTimeOffset.Now;
+			_captureHoldUntil = DateTimeOffset.MinValue;
             snapshot = _lastBuffs;
             timestamp = _lastUpdateTimestamp;
         }
@@ -210,6 +217,7 @@ public sealed class OverlayHost : IDisposable
         _window.SizeChanged -= OnWindowSizeChanged;
         _window.Close();
     }
+	
 	public void HandleInputActivity()
     {
         CaptureRegionSettings? regionCopy;
@@ -247,10 +255,8 @@ public sealed class OverlayHost : IDisposable
         {
             lock (_stateLock)
             {
-                _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
-                _lastUpdateTimestamp = now;
+                _captureHoldUntil = DateTimeOffset.MinValue;
             }
-            System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(Array.Empty<(Buff, BuffDefinition?)>(), now));
             return;
         }
 
@@ -278,6 +284,7 @@ public sealed class OverlayHost : IDisposable
         {
             _lastBuffs = mapped;
             _lastUpdateTimestamp = now;
+			_captureHoldUntil = now.Add(CaptureHoldDuration);
         }
         System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(mapped, now));
     }
