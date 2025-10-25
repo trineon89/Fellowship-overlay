@@ -16,9 +16,11 @@ namespace Fellowship_overlay;
 
 public partial class OverlayWindow : Window
 {
+    private const int WardenOfTheTempleSpellId = 2447;
+
     private OverlaySettings _settings;
     private bool _isLocked = true;
-	private static readonly SolidColorBrush UnlockedBackgroundBrush;
+    private static readonly SolidColorBrush UnlockedBackgroundBrush;
 
     static OverlayWindow()
     {
@@ -168,8 +170,15 @@ public partial class OverlayWindow : Window
         {
             Width = size,
             Height = size,
-            Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(80, 30, 144, 255)),
-            IsHitTestVisible = false
+            Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(120, 30, 144, 255)),
+            IsHitTestVisible = false,
+            Effect = new DropShadowEffect
+            {
+                Color = System.Windows.Media.Color.FromArgb(180, 30, 144, 255),
+                BlurRadius = 26,
+                ShadowDepth = 0,
+                Opacity = 0.65
+            }
         };
         grid.Children.Add(halo);
 
@@ -180,14 +189,14 @@ public partial class OverlayWindow : Window
                 StrokeThickness = ringThickness,
                 StrokeStartLineCap = PenLineCap.Round,
                 StrokeEndLineCap = PenLineCap.Round,
-                Stroke = new SolidColorBrush(System.Windows.Media.Color.FromArgb(ClampToByte(120 + 120 * pct), 135, 206, 250)),
+                Stroke = new SolidColorBrush(System.Windows.Media.Color.FromArgb(ClampToByte(160 + 95 * pct), 135, 206, 250)),
                 IsHitTestVisible = false,
                 Effect = new DropShadowEffect
                 {
-                    Color = System.Windows.Media.Color.FromArgb(ClampToByte(180 * pct), 135, 206, 250),
-                    BlurRadius = 20,
+                    Color = System.Windows.Media.Color.FromArgb(ClampToByte(220 * pct), 135, 206, 250),
+                    BlurRadius = 30,
                     ShadowDepth = 0,
-                    Opacity = Math.Max(0.2, Math.Min(0.9, 0.4 + 0.4 * pct))
+                    Opacity = Math.Max(0.45, Math.Min(1.0, 0.55 + 0.45 * pct))
                 }
             };
 
@@ -242,7 +251,8 @@ public partial class OverlayWindow : Window
 
         if (iconsOnly)
         {
-            if (buff.Stacks > 1)
+            var showStackBadge = buff.Stacks > 1 || (definition?.SpellId == WardenOfTheTempleSpellId && buff.Stacks >= 1);
+            if (showStackBadge)
             {
                 var stackBadge = new Border
                 {
@@ -252,14 +262,19 @@ public partial class OverlayWindow : Window
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
                     VerticalAlignment = System.Windows.VerticalAlignment.Top,
                     Margin = new Thickness(2),
-                    Effect = CreateTextShadow()
+                    Effect = CreateTextOutline()
                 };
+				var stackText = definition?.SpellId == WardenOfTheTempleSpellId
+                    ? buff.Stacks.ToString()
+                    : $"x{buff.Stacks}";
                 stackBadge.Child = new TextBlock
                 {
-                    Text = $"x{buff.Stacks}",
+                    Text = stackText,
                     Foreground = System.Windows.Media.Brushes.White,
                     FontWeight = FontWeights.Bold,
-                    FontSize = 12
+                    FontSize = 14,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                    VerticalAlignment = System.Windows.VerticalAlignment.Center
                 };
                 grid.Children.Add(stackBadge);
             }
@@ -272,10 +287,11 @@ public partial class OverlayWindow : Window
                 Text = timeText,
                 Foreground = System.Windows.Media.Brushes.White,
                 FontWeight = FontWeights.Bold,
+				FontSize = 18,
                 HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                 VerticalAlignment = System.Windows.VerticalAlignment.Bottom,
                 Margin = new Thickness(0, 0, 0, 4),
-                Effect = CreateTextShadow()
+                Effect = CreateTextOutline(10, 1.0)
             };
             grid.Children.Add(timerBlock);
         }
@@ -283,12 +299,13 @@ public partial class OverlayWindow : Window
         return grid;
     }
 	
-	private static DropShadowEffect CreateTextShadow() => new()
+	private static DropShadowEffect CreateTextOutline(double blurRadius = 7, double opacity = 0.9) => new()
     {
         Color = System.Windows.Media.Colors.Black,
-        BlurRadius = 6,
+        BlurRadius = 0,
         ShadowDepth = 0,
-        Opacity = 0.75
+        Opacity = opacity,
+        RenderingBias = RenderingBias.Quality
     };
 
 	
