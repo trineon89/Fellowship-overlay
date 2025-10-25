@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Shapes;
 using Fellowship_overlay.Core;
 
@@ -53,9 +55,9 @@ public partial class OverlayWindow : Window
             MakeClickThrough(locked);
         }
 
-        MoveHintTextBlock.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
-        ResizeGripControl.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
-        Cursor = locked ? System.Windows.Input.Cursors.Arrow : System.Windows.Input.Cursors.SizeAll;
+        MoveHintTextBlock.Visibility = locked? Visibility.Collapsed : Visibility.Visible;
+        ResizeGripControl.Visibility = locked? Visibility.Collapsed : Visibility.Visible;
+    Cursor = locked? System.Windows.Input.Cursors.Arrow : System.Windows.Input.Cursors.SizeAll;
     }
 
     public void SetStatus(string? message)
@@ -78,15 +80,15 @@ public partial class OverlayWindow : Window
 
         foreach (var (buff, definition) in buffs)
         {
-            var total = (buff.ExpiresAt?.Subtract(buff.AppliedAt)).GetValueOrDefault(TimeSpan.FromSeconds(1));
+            var total = buff.ExpiresAt.HasValue ? buff.ExpiresAt.Value - buff.AppliedAt : (TimeSpan?)null;
             var left = buff.ExpiresAt.HasValue ? buff.ExpiresAt.Value - now : (TimeSpan?)null;
-            var pct = left.HasValue ? Math.Max(0, Math.Min(1, left.Value.TotalMilliseconds / total.TotalMilliseconds)) : 1.0;
+            var pct = CalculateFill(total, left);
 
             var row = new Grid { Margin = new Thickness(0, 0, 0, 12) };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-            var iconContainer = CreateIcon(definition, buff.Name);
+            var iconContainer = CreateCooldownIcon(definition, buff.Name, pct, total.HasValue);
             row.Children.Add(iconContainer);
 
             var infoPanel = new StackPanel { Margin = new Thickness(12, 0, 0, 0) };
@@ -112,65 +114,108 @@ public partial class OverlayWindow : Window
             header.Children.Add(detailText);
             infoPanel.Children.Add(header);
 
-            var bg = new Border
-            {
-                Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(90, 255, 255, 255)),
-                CornerRadius = new CornerRadius(4),
-                Height = 8,
-                Margin = new Thickness(0, 6, 0, 0)
-            };
-
-            var bar = new System.Windows.Shapes.Rectangle
-            {
-                Height = 8,
-                Fill = new SolidColorBrush(System.Windows.Media.Color.FromRgb(126, 195, 255)),
-                RadiusX = 4,
-                RadiusY = 4,
-                Width = Math.Max(0, pct * 220)
-            };
-
-            bg.Child = bar;
-            infoPanel.Children.Add(bg);
-
             row.Children.Add(infoPanel);
             BuffPanel.Children.Add(row);
         }
     }
 
-    private UIElement CreateIcon(BuffDefinition? definition, string fallbackName)
+    private UIElement CreateCooldownIcon(BuffDefinition? definition, string fallbackName, double pct, bool hasTimer)
     {
-        var container = new Border
+        const double size = 56;
+        const double ringThickness = 6;
+
+        var grid = new Grid
         {
-            Width = 48,
-            Height = 48,
+            Width = size,
+            Height = size,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+            VerticalAlignment = System.Windows.VerticalAlignment.Center
+        };
+
+        var halo = new Ellipse
+        {
+            Width = size,
+            Height = size,
+            Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(80, 30, 144, 255)),
+            IsHitTestVisible = false
+        };
+        grid.Children.Add(halo);
+
+        if (hasTimer && pct > 0)
+        {
+            var ring = new Path
+            {
+                StrokeThickness = ringThickness,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                Stroke = new SolidColorBrush(System.Windows.Media.Color.FromArgb(ClampToByte(120 + 120 * pct), 135, 206, 250)),
+                IsHitTestVisible = false,
+                Effect = new DropShadowEffect
+                {
+                    Color = System.Windows.Media.Color.FromArgb(ClampToByte(180 * pct), 135, 206, 250),
+                    BlurRadius = 20,
+                    ShadowDepth = 0,
+                    Opacity = Math.Max(0.2, Math.Min(0.9, 0.4 + 0.4 * pct))
+                }
+            };
+
+            var radius = (size - ringThickness) / 2;
+            ring.Data = pct >= 0.999
+                ? new EllipseGeometry(new System.Windows.Point(size / 2, size / 2), radius, radius)
+                : CreateArcGeometry(pct, radius, new System.Windows.Point(size / 2, size / 2));
+            grid.Children.Add(ring);
+        }
+
+        var iconBorder = new Border
+        {
+            Width = size - 12,
+            Height = size - 12,
             CornerRadius = new CornerRadius(10),
-            Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(60, 255, 255, 255)),
-            VerticalAlignment = VerticalAlignment.Center,
-            Child = null
+            Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(200, 0, 0, 0)),
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+            VerticalAlignment = System.Windows.VerticalAlignment.Center,
+            Padding = new Thickness(4)
         };
 
         if (definition != null && TryFindResource(definition.IconResourceKey) is ImageSource img)
         {
-            container.Child = new System.Windows.Controls.Image
+            iconBorder.Child = new System.Windows.Controls.Image
             {
                 Source = img,
-                Stretch = Stretch.Uniform,
-                Margin = new Thickness(6)
+                Stretch = Stretch.Uniform
             };
         }
         else
         {
-            container.Child = new TextBlock
+            iconBorder.Child = new TextBlock
             {
                 Text = string.IsNullOrEmpty(fallbackName) ? "?" : new string(fallbackName.Take(2).ToArray()).ToUpperInvariant(),
                 Foreground = System.Windows.Media.Brushes.White,
                 HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
+                VerticalAlignment = System.Windows.VerticalAlignment.Center,
                 FontWeight = FontWeights.Bold
             };
         }
 
-        return container;
+        grid.Children.Add(iconBorder);
+        return grid;
+    }
+
+    private static double CalculateFill(TimeSpan? total, TimeSpan? left)
+    {
+        if (!total.HasValue)
+        {
+            return 1.0;
+        }
+
+        var totalMs = total.Value.TotalMilliseconds;
+        if (totalMs <= 0.0001)
+        {
+            return left.HasValue && left.Value > TimeSpan.Zero ? 1.0 : 0.0;
+        }
+
+        var leftMs = left?.TotalMilliseconds ?? totalMs;
+        return Math.Max(0, Math.Min(1, leftMs / totalMs));
     }
 
     private static string FormatDetails(Buff buff, TimeSpan? left)
@@ -181,12 +226,59 @@ public partial class OverlayWindow : Window
             parts.Add($"x{buff.Stacks}");
         }
 
-        parts.Add(left.HasValue ? FormatTime(left.Value) : "∞");
+        if (left.HasValue)
+        {
+            var display = left.Value < TimeSpan.Zero ? TimeSpan.Zero : left.Value;
+            parts.Add(FormatTime(display));
+        }
+        else
+        {
+            parts.Add("∞");
+        }
         return string.Join(" · ", parts);
     }
 
     private static string FormatTime(TimeSpan t) => t.TotalSeconds >= 10 ? $"{(int)t.TotalSeconds}s" : $"{t.TotalSeconds:F1}s";
 
+    private static Geometry CreateArcGeometry(double pct, double radius, System.Windows.Point center)
+    {
+        var angle = pct * 360;
+        var startAngle = -90.0;
+        var endAngle = startAngle + angle;
+        var start = GetPointOnCircle(radius, startAngle, center);
+        var end = GetPointOnCircle(radius, endAngle, center);
+        var isLarge = angle > 180;
+
+        var figure = new PathFigure
+        {
+            StartPoint = start,
+            IsClosed = false,
+            IsFilled = false
+        };
+
+        figure.Segments.Add(new ArcSegment
+        {
+            Point = end,
+            Size = new System.Windows.Size(radius, radius),
+            SweepDirection = SweepDirection.Clockwise,
+            IsLargeArc = isLarge
+        });
+
+        var geometry = new PathGeometry();
+        geometry.Figures.Add(figure);
+        geometry.Freeze();
+        return geometry;
+    }
+
+    private static System.Windows.Point GetPointOnCircle(double radius, double angleDegrees, System.Windows.Point center)
+    {
+        var radians = angleDegrees * Math.PI / 180.0;
+        var x = center.X + radius * Math.Cos(radians);
+        var y = center.Y + radius * Math.Sin(radians);
+        return new System.Windows.Point(x, y);
+    }
+
+    private static byte ClampToByte(double value) => (byte)Math.Max(0, Math.Min(255, value));
     private void MakeClickThrough(bool enable)
     {
         var hwnd = new WindowInteropHelper(this).Handle;

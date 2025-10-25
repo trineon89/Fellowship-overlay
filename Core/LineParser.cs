@@ -15,7 +15,7 @@ namespace Fellowship_overlay.Core
 
             var ts = DateTimeOffset.Parse(p[0], null, DateTimeStyles.AssumeUniversal);
             var ev = p[1];
-            if (ev != "EFFECT_APPLIED" && ev != "EFFECT_REMOVED") return null;
+            if (ev != "EFFECT_APPLIED" && ev != "EFFECT_REMOVED" && ev != "EFFECT_REFRESHED") return null;
 
             string tgtGuid = p[4];
             string tgtName = Unquote(p[5]);
@@ -28,7 +28,7 @@ namespace Fellowship_overlay.Core
             var auraType = p[10]; // BUFF/DEBUFF
             if (auraType != "BUFF") return null;
 
-            var type = ev == "EFFECT_APPLIED" ? AuraEventType.Applied : AuraEventType.Removed;
+           var type = ev == "EFFECT_REMOVED" ? AuraEventType.Removed : AuraEventType.Applied;
             return new AuraEvent(ts, type, tgtGuid, tgtName, spellId, spellName, duration, stacks);
         }
 

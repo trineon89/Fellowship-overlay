@@ -17,6 +17,24 @@
       "name": "Hidden Power",
       "icon": "Icon.Buff.HiddenPower",
       "category": "Empowerments"
+    },
+    {
+      "spellId": 1534,
+      "name": "Spirited Strikes",
+      "icon": "Icon.Buff.SpiritedStrikes",
+      "category": "Spirited Techniques"
+    },
+    {
+      "spellId": 1570,
+      "name": "Spirited Vortex",
+      "icon": "Icon.Buff.SpiritedVortex",
+      "category": "Spirited Techniques"
+    },
+    {
+      "spellId": 2447,
+      "name": "Warden of the Temple",
+      "icon": "Icon.Buff.WardenOfTheTemple",
+      "category": "Spirited Techniques"
     }
   ],
   "presets": [
@@ -33,6 +51,15 @@
       "description": "Offensive empowerments that define burst windows.",
       "spellIds": [
         2164
+      ]
+    },
+    {
+      "name": "Spirited Synergy",
+      "description": "Spirited Vortex, Spirited Strikes, and Warden of the Temple stacks.",
+      "spellIds": [
+        1570,
+        1534,
+        2447
       ]
     }
   ]

@@ -71,12 +71,16 @@ public static class BuffCatalog
         new(1512, "Resonance of Earth", "Icon.Buff.ResonanceOfEarth", "Earthsong Harmonies"),
         new(1574, "Stone Shield", "Icon.Buff.StoneShield", "Earthsong Harmonies"),
         new(2164, "Hidden Power", "Icon.Buff.HiddenPower", "Empowerments"),
+		new(1534, "Spirited Strikes", "Icon.Buff.SpiritedStrikes", "Spirited Techniques"),
+        new(1570, "Spirited Vortex", "Icon.Buff.SpiritedVortex", "Spirited Techniques"),
+        new(2447, "Warden of the Temple", "Icon.Buff.WardenOfTheTemple", "Spirited Techniques"),
     };
 
     private static readonly BuffPreset[] DefaultPresets =
     {
         new("Earthwarden Core", "Stone Shield and Resonance of Earth from the Earthwarden toolkit.", new [] { 1574, 1512 }),
-        new("Empowerments", "Offensive empowerments that define burst windows.", new [] { 2164 })
+        new("Empowerments", "Offensive empowerments that define burst windows.", new [] { 2164 }),
+        new("Spirited Synergy", "Spirited Vortex, Spirited Strikes, and the Warden of the Temple stacks.", new [] { 1570, 1534, 2447 })
     };
 
     private sealed record CatalogData(

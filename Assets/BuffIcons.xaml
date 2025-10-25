@@ -80,4 +80,9 @@
             </DrawingGroup>
         </DrawingImage.Drawing>
     </DrawingImage>
+	
+	<BitmapImage x:Key="Icon.Buff.SpiritedVortex" UriSource="pack://application:,,,/Assets/BuffImages/spirited_vortex.png" />
+    <BitmapImage x:Key="Icon.Buff.SpiritedStrikes" UriSource="pack://application:,,,/Assets/BuffImages/spirited_strikes.png" />
+    <BitmapImage x:Key="Icon.Buff.WardenOfTheTemple" UriSource="pack://application:,,,/Assets/BuffImages/warden_of_the_temple.png" />
+	
 </ResourceDictionary>

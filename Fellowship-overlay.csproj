@@ -11,20 +11,26 @@
   </PropertyGroup>
 
  <PropertyGroup>
-  <Version>1.0.2</Version>                <!-- use this for NetSparkle sparkle:version -->
-  <AssemblyVersion>1.0.2.0</AssemblyVersion>
-  <FileVersion>1.0.2.0</FileVersion>
-  <InformationalVersion>1.0.2</InformationalVersion>
+  <Version>1.0.3</Version>                <!-- use this for NetSparkle sparkle:version -->
+  <AssemblyVersion>1.0.3.0</AssemblyVersion>
+  <FileVersion>1.0.3.0</FileVersion>
+  <InformationalVersion>1.0.3</InformationalVersion>
 </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="NetSparkleUpdater.UI.WPF" Version="3.0.4" />
   </ItemGroup>
 
-<ItemGroup>
+  <ItemGroup>
     <Content Include="Assets\FellowshipBuffs.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\BuffImages\spirited_vortex.png" />
+    <Resource Include="Assets\BuffImages\spirited_strikes.png" />
+    <Resource Include="Assets\BuffImages\warden_of_the_temple.png" />
   </ItemGroup>
 
   <ItemGroup>
