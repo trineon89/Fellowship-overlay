@@ -1,19 +1,26 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System.Windows;
+using Fellowship_overlay.Services;
 
 namespace Fellowship_overlay;
 
-/// <summary>
-/// Interaction logic for App.xaml
-/// </summary>
 public partial class App : System.Windows.Application
 {
-	protected override void OnStartup(StartupEventArgs e)
-	{
-		base.OnStartup(e);
-		var sparkle = Fellowship_overlay.Services.Updater.Create();
-		_ = sparkle.CheckForUpdatesAtUserRequest();  // or StartLoop(true)
-	}
-}
+    public AppController? Controller { get; private set; }
 
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        var sparkle = Updater.Create();
+        _ = sparkle.CheckForUpdatesAtUserRequest();
+
+        Controller = new AppController();
+        var settingsWindow = new SettingsWindow(Controller);
+        settingsWindow.Show();
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        Controller?.Dispose();
+        base.OnExit(e);
+    }
+}
