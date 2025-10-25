@@ -8,9 +8,9 @@ namespace Fellowship_overlay.Services
     {
         private const string AppCastUrl = "https://trineon89.github.io/Fellowship-overlay/appcast.xml";
 
-        public static Sparkle Create()
+        public static SparkleUpdater Create()
         {
-            var sparkle = new Sparkle(AppCastUrl)
+            var sparkle = new SparkleUpdater(AppCastUrl)
             {
                 UIFactory = new NetSparkleUpdater.UI.WPF.UIFactory(iconBitmap: null),
                 SecurityProtocolType = System.Net.SecurityProtocolType.Tls12
