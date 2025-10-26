@@ -9,7 +9,7 @@
         AllowsTransparency="True"
         Background="Transparent"
         ShowInTaskbar="False"
-        ResizeMode="CanResizeWithGrip">
+        ResizeMode="NoResize">
     <Border x:Name="ChromeBorder"
             Background="Transparent"
             CornerRadius="12"

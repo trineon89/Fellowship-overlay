@@ -67,6 +67,7 @@ public partial class OverlayWindow : Window
         MoveHintTextBlock.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
         ResizeGripControl.Visibility = locked ? Visibility.Collapsed : Visibility.Visible;
         Cursor = locked ? System.Windows.Input.Cursors.Arrow : System.Windows.Input.Cursors.SizeAll;
+		ResizeMode = locked ? ResizeMode.NoResize : ResizeMode.CanResizeWithGrip;
         ChromeBorder.Background = locked ? System.Windows.Media.Brushes.Transparent : UnlockedBackgroundBrush;
     }
 
@@ -88,7 +89,12 @@ public partial class OverlayWindow : Window
     {
         BuffPanel.Children.Clear();
 
-		if (_settings.ShowIconsOnly)
+		var hasBuffs = buffs.Count > 0;
+        TitleTextBlock.Visibility = !hasBuffs || string.IsNullOrWhiteSpace(_settings.Name)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+
+        if (_settings.ShowIconsOnly)
         {
             var iconWrap = new WrapPanel
             {

@@ -3,6 +3,16 @@
   <channel>
     <title>Fellowship Overlay</title>
 	<item>
+	<title>v1.0.4</title>
+      <sparkle:releaseNotesLink>https://github.com/trineon89/Fellowship-overlay/releases/tag/v1.0.4</sparkle:releaseNotesLink>
+      <enclosure
+         url="https://github.com/trineon89/Fellowship-overlay/releases/download/v1.0.0/Fellowship_overlay-1.0.4.exe"
+         sparkle:version="1.0.4"
+         length="162286122"
+         type="application/octet-stream" />
+	
+	</item>
+	<item>
 	<title>v1.0.1</title>
       <sparkle:releaseNotesLink>https://github.com/trineon89/Fellowship-overlay/releases/tag/v1.0.1</sparkle:releaseNotesLink>
       <enclosure

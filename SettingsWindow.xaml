@@ -8,12 +8,17 @@
         WindowStartupLocation="CenterScreen">
     <Grid Margin="16">
         <Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Vertical" Grid.Row="0" Margin="0,0,0,12">
+        <Menu Grid.Row="0" Margin="0,0,0,8">
+            <MenuItem Header="?" Click="OnShowAbout" />
+        </Menu>
+
+        <StackPanel Orientation="Vertical" Grid.Row="1" Margin="0,0,0,12">
             <TextBlock Text="General" FontSize="18" FontWeight="SemiBold" />
             <Grid Margin="0,8,0,0">
                 <Grid.ColumnDefinitions>
@@ -76,7 +81,7 @@
 					  
         </StackPanel>
 
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220" />
                 <ColumnDefinition Width="*" />
@@ -108,14 +113,19 @@
                                  SelectionChanged="OnOverlaySelectionChanged" />
                     </ScrollViewer>
 
-                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+                    <StackPanel Grid.Row="2" Orientation="Vertical">
                         <ComboBox x:Name="PresetComboBox"
                                   Width="150"
-                                  Margin="0,0,8,0"
+                                  Margin="0,0,0,8"
                                   DisplayMemberPath="Name"
                                   SelectedIndex="0" />
-                        <Button Content="Add" Width="60" Click="OnAddOverlay" />
-                        <Button Content="Remove" Width="70" Margin="8,0,0,0" Click="OnRemoveOverlay" />
+                        <Button Content="Add"
+                                Width="150"
+                                Click="OnAddOverlay"
+                                Margin="0,0,0,8" />
+                        <Button Content="Remove"
+                                Width="150"
+                                Click="OnRemoveOverlay" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -201,7 +211,7 @@
                                   Checked="OnOverlayDisplayModeChanged"
                                   Unchecked="OnOverlayDisplayModeChanged" />
 								  
-								  <Grid Margin="0,12,0,0">
+						<Grid Margin="0,12,0,0" Visibility="Collapsed">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -253,7 +263,7 @@
             </Border>
         </Grid>
 
-        <DockPanel Grid.Row="2" Margin="0,12,0,0">
+        <DockPanel Grid.Row="3" Margin="0,12,0,0">
             <TextBlock x:Name="StatusTextBlock"
                        DockPanel.Dock="Left"
                        Foreground="Gray"

@@ -1,0 +1,47 @@
+<Window x:Class="Fellowship_overlay.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About Fellowship Overlay"
+        Width="360"
+        Height="240"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Border Padding="20" Background="#FF1E1E1E">
+        <StackPanel>
+            <TextBlock Text="Thanks for supporting Fellowship Overlay!"
+                       Foreground="White"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       TextWrapping="Wrap" />
+
+            <TextBlock Margin="0,12,0,0"
+                       Foreground="White"
+                       TextWrapping="Wrap">
+                <Run Text="Created with care by " />
+                <Run Text="trineon89" FontWeight="Bold" />
+            </TextBlock>
+
+            <StackPanel Orientation="Horizontal" Margin="0,16,0,0" VerticalAlignment="Center">
+                <TextBlock Text="☕"
+                           FontSize="20"
+                           Margin="0,0,8,0" />
+                <TextBlock Foreground="#FFB3E5FC" FontSize="14">
+                    <Hyperlink NavigateUri="https://www.buymeacoffee.com/trineon89"
+                               RequestNavigate="OnHyperlinkRequestNavigate">
+                        Buy me a coffee
+                    </Hyperlink>
+                </TextBlock>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,0" VerticalAlignment="Center">
+                <TextBlock Text="💬"
+                           FontSize="20"
+                           Margin="0,0,8,0" />
+                <TextBlock Foreground="#FFB3E5FC"
+                           FontSize="14"
+                           VerticalAlignment="Center"
+                           Text="Discord: trineon89" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

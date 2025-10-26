@@ -57,6 +57,16 @@ public partial class SettingsWindow : Window
 
         RefreshStatus();
     }
+	
+	private void OnShowAbout(object sender, RoutedEventArgs e)
+    {
+        var aboutWindow = new AboutWindow
+        {
+            Owner = this
+        };
+
+        aboutWindow.ShowDialog();
+    }
 
     private void RefreshStatus()
     {
