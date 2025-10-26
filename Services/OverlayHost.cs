@@ -34,8 +34,8 @@ public sealed class OverlayHost : IDisposable
             .Select((spellId, index) => (spellId, index))
             .ToDictionary(pair => pair.spellId, pair => pair.index);
         _onSettingsChanged = onSettingsChanged;
-		
-		_screenCaptureActive = settings.BuffCaptureRegion?.IsValid == true;
+
+        _screenCaptureActive = false;
 
         _window = new OverlayWindow(settings);
         _window.Show();
@@ -131,12 +131,10 @@ public sealed class OverlayHost : IDisposable
                 _orderLookup[spellId] = index;
             }
 
-            _screenCaptureActive = _settings.BuffCaptureRegion?.IsValid == true;
-            screenCaptureChanged = _screenCaptureActive != wasScreenCaptureActive;
-			if (!_screenCaptureActive)
-            {
-                _captureHoldUntil = DateTimeOffset.MinValue;
-            }
+            _screenCaptureActive = false;
+            screenCaptureChanged = wasScreenCaptureActive;
+            _captureHoldUntil = DateTimeOffset.MinValue;
+
             snapshot = _lastBuffs;
             timestamp = _lastUpdateTimestamp == DateTimeOffset.MinValue ? DateTimeOffset.Now : _lastUpdateTimestamp;
         }

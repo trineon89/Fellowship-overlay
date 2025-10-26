@@ -314,6 +314,7 @@ public partial class SettingsWindow : Window
             }
 
             _controller.UpdateOverlay(_selectedOverlay);
+            _controller.SaveSettings();
         }
     }
 
