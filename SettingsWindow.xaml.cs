@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -16,6 +17,7 @@ public partial class SettingsWindow : Window
 {
     private readonly AppController _controller;
     private OverlaySettings? _selectedOverlay;
+	private readonly List<BuffSelection> _buffSelections;
     private bool _suppressBuffEvents;
     private bool _suppressOverlayEvents;
     private bool _suppressGeneralEvents;
@@ -27,7 +29,8 @@ public partial class SettingsWindow : Window
         _controller = controller;
 
         PresetComboBox.ItemsSource = BuffCatalog.Presets;
-        BuffsItemsControl.ItemsSource = BuffCatalog.Buffs;
+        _buffSelections = BuffCatalog.Buffs.Select(definition => new BuffSelection(definition)).ToList();
+        BuffsItemsControl.ItemsSource = _buffSelections;
 
         LoadSettings();
         _controller.OverlaySettingsChanged += OnControllerOverlaySettingsChanged;
@@ -120,8 +123,8 @@ public partial class SettingsWindow : Window
                 OverlayWidthTextBox.Text = string.Empty;
                 OverlayHeightTextBox.Text = string.Empty;
                 ShowIconsOnlyCheckBox.IsChecked = false;
-				BuffAreaTextBlock.Text = "Not set";
-                SetBuffChecks(Array.Empty<int>());
+                BuffAreaTextBlock.Text = "Not set";
+                UpdateBuffSelections(Array.Empty<int>());
                 return;
             }
 
@@ -131,8 +134,8 @@ public partial class SettingsWindow : Window
             OverlayWidthTextBox.Text = _selectedOverlay.Width.ToString("F0", CultureInfo.InvariantCulture);
             OverlayHeightTextBox.Text = _selectedOverlay.Height.ToString("F0", CultureInfo.InvariantCulture);
             ShowIconsOnlyCheckBox.IsChecked = _selectedOverlay.ShowIconsOnly;
-			UpdateBuffAreaText();
-            SetBuffChecks(_selectedOverlay.TrackedSpellIds);
+            UpdateBuffAreaText();
+            UpdateBuffSelections(_selectedOverlay.TrackedSpellIds);
         }
         finally
         {
@@ -140,42 +143,20 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private void SetBuffChecks(IEnumerable<int> spellIds)
+    private void UpdateBuffSelections(IEnumerable<int> spellIds)
     {
         var set = new HashSet<int>(spellIds);
-        BuffsItemsControl.UpdateLayout();
         _suppressBuffEvents = true;
         try
         {
-            foreach (var child in FindVisualChildren<System.Windows.Controls.CheckBox>(BuffsItemsControl))
+            foreach (var selection in _buffSelections)
             {
-                if (child.Tag is int id)
-                {
-                    child.IsChecked = set.Contains(id);
-                }
+                selection.IsTracked = set.Contains(selection.Definition.SpellId);
             }
         }
         finally
         {
             _suppressBuffEvents = false;
-        }
-    }
-
-    private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
-    {
-        if (parent == null) yield break;
-        for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
-        {
-            var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
-            if (child is T t)
-            {
-                yield return t;
-            }
-
-            foreach (var descendant in FindVisualChildren<T>(child))
-            {
-                yield return descendant;
-            }
         }
     }
 
@@ -357,8 +338,9 @@ public partial class SettingsWindow : Window
             OverlayTopTextBox.Text = e.Top.ToString("F0", CultureInfo.InvariantCulture);
             OverlayWidthTextBox.Text = e.Width.ToString("F0", CultureInfo.InvariantCulture);
             OverlayHeightTextBox.Text = e.Height.ToString("F0", CultureInfo.InvariantCulture);
-			ShowIconsOnlyCheckBox.IsChecked = e.ShowIconsOnly;
+            ShowIconsOnlyCheckBox.IsChecked = e.ShowIconsOnly;
             UpdateBuffAreaText();
+            UpdateBuffSelections(e.TrackedSpellIds);
         }
         finally
         {
@@ -385,5 +367,30 @@ public partial class SettingsWindow : Window
         _controller.DebugEnabledChanged -= OnDebugEnabledChanged;
         base.OnClosed(e);
         System.Windows.Application.Current.Shutdown();
+    }
+	
+    private sealed class BuffSelection : INotifyPropertyChanged
+    {
+        public BuffDefinition Definition { get; }
+
+        private bool _isTracked;
+
+        public bool IsTracked
+        {
+            get => _isTracked;
+            set
+            {
+                if (_isTracked == value) return;
+                _isTracked = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsTracked)));
+            }
+        }
+
+        public BuffSelection(BuffDefinition definition)
+        {
+            Definition = definition;
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

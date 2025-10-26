@@ -238,10 +238,11 @@
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate DataType="{x:Type core:BuffDefinition}">
-                                    <CheckBox Content="{Binding Name}"
-                                              Tag="{Binding SpellId}"
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Definition.Name}"
+                                              Tag="{Binding Definition.SpellId}"
                                               Margin="0,4,12,4"
+                                              IsChecked="{Binding IsTracked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                               Checked="OnBuffSelectionChanged"
                                               Unchecked="OnBuffSelectionChanged" />
                                 </DataTemplate>
