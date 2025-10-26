@@ -10,9 +10,7 @@ public partial class App : System.Windows.Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        var sparkle = Updater.Create();
-        _ = sparkle.CheckForUpdatesAtUserRequest();
-
+		
         Controller = new AppController();
         var settingsWindow = new SettingsWindow(Controller);
         settingsWindow.Show();

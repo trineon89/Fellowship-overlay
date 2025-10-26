@@ -12,7 +12,7 @@ Fellowship Overlay is a Windows desktop companion app that reads the Fellowship 
 - **Screen capture fallback.** Optionally define a capture region so the overlay can recognize buff icons directly from the game UI when the combat log is momentarily quiet.
 - **Click-through locking.** Lock overlays to make them ignore mouse clicks during combat, then unlock to reposition or resize with visual cues.
 - **Debug tools.** An optional debug window echoes raw combat-log lines and parsed aura events to make troubleshooting easier.
-- **Automatic updates.** Integrates with NetSparkle so you can offer self-update feeds without changing the app code.
+- **Hand-tuned for tanks.** Includes presets and recognition tuned so that Meiko (tank) is fully supported out of the box.
 
 ## Requirements
 
@@ -25,8 +25,8 @@ Fellowship Overlay is a Windows desktop companion app that reads the Fellowship 
 
 ### Downloading & Running
 
-1. Download the latest signed installer from your release channel (see the `Installer/` folder for scripts).
-2. Install and launch **Fellowship Overlay**.
+1. Download the latest release build (portable `.zip`) from your distribution channel or build from source (see below).
+2. Extract the archive and launch **Fellowship Overlay**.
 3. On first run the Settings window appears automatically so you can finish the setup below.
 
 ### Building from Source
@@ -41,8 +41,6 @@ dotnet build Fellowship-overlay.sln -c Release
 # Run the app (from the project directory)
 dotnet run --project Fellowship-overlay.csproj
 ```
-
-To build the shipping installer, open `Installer/FellowshipOverlayInstaller.iss` in Inno Setup 6 or run your existing automation.
 
 ## Usage
 
@@ -90,4 +88,4 @@ Please follow the existing coding style—nullable reference types are enabled, 
 
 ## Acknowledgements
 
-Fellowship Overlay uses [NetSparkleUpdater](https://github.com/NetSparkleUpdater/NetSparkle) for update delivery and relies on the Fellowship combat log to drive all in-app timers and recognizers.
+Maintained with care by trineon89 and the Fellowship community. The overlay relies on the Fellowship combat log to drive all in-app timers and recognizers.
