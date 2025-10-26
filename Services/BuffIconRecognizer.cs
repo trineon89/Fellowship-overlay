@@ -14,7 +14,7 @@ namespace Fellowship_overlay.Services;
 public sealed class BuffIconRecognizer
 {
     private const int GridSize = 4;
-    private const double MatchThreshold = 0.18;
+    private const double MatchThreshold = 0.24;
 
     private static readonly Lazy<BuffIconRecognizer> _instance = new(() => new BuffIconRecognizer());
 
@@ -69,7 +69,11 @@ public sealed class BuffIconRecognizer
             return Array.Empty<RecognizedBuff>();
         }
 
-        var trackedSet = trackedSpellIds?.Any() == true ? new HashSet<int>(trackedSpellIds) : null;
+        var trackedSet = trackedSpellIds is null ? null : new HashSet<int>(trackedSpellIds);
+        if (trackedSet is { Count: 0 })
+        {
+            return Array.Empty<RecognizedBuff>();
+        }
         var rect = new Rectangle(0, 0, capture.Width, capture.Height);
         var data = capture.LockBits(rect, ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
         try
