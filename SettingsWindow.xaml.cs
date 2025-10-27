@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using Fellowship_overlay.Core;
 using Fellowship_overlay.Services;
@@ -18,9 +19,12 @@ public partial class SettingsWindow : Window
     private readonly AppController _controller;
     private OverlaySettings? _selectedOverlay;
 	private readonly List<BuffSelection> _buffSelections;
+    private readonly ListCollectionView _buffView;
+    private readonly List<string> _availableClasses;
     private bool _suppressBuffEvents;
     private bool _suppressOverlayEvents;
     private bool _suppressGeneralEvents;
+	private string? _selectedClass;
     private static readonly Regex NumericRegex = new(@"^[0-9.\-]+$");
 
     public SettingsWindow(AppController controller)
@@ -30,7 +34,22 @@ public partial class SettingsWindow : Window
 
         PresetComboBox.ItemsSource = BuffCatalog.Presets;
         _buffSelections = BuffCatalog.Buffs.Select(definition => new BuffSelection(definition)).ToList();
-        BuffsItemsControl.ItemsSource = _buffSelections;
+        _buffView = new ListCollectionView(_buffSelections);
+        _buffView.GroupDescriptions.Add(new PropertyGroupDescription(nameof(BuffSelection.GroupName)));
+        _buffView.Filter = FilterBuffSelection;
+        BuffsItemsControl.ItemsSource = _buffView;
+
+        _availableClasses = new List<string> { BuffSelection.AllClassesOption };
+        foreach (var championClass in BuffCatalog.Classes)
+        {
+            if (!_availableClasses.Contains(championClass, StringComparer.OrdinalIgnoreCase))
+            {
+                _availableClasses.Add(championClass);
+            }
+        }
+
+        ClassComboBox.ItemsSource = _availableClasses;
+        ClassComboBox.SelectedIndex = 0;
 
         LoadSettings();
         _controller.OverlaySettingsChanged += OnControllerOverlaySettingsChanged;
@@ -43,6 +62,37 @@ public partial class SettingsWindow : Window
         LogDirTextBox.Text = _controller.Settings.LogDirectory ?? string.Empty;
         PlayerNameTextBox.Text = _controller.Settings.PlayerName ?? string.Empty;
         PlayerGuidTextBox.Text = _controller.Settings.PlayerGuid ?? string.Empty;
+		
+		var storedClass = _controller.Settings.PlayerClass;
+
+        _suppressGeneralEvents = true;
+        if (!string.IsNullOrWhiteSpace(storedClass))
+        {
+            storedClass = storedClass.Trim();
+            var index = _availableClasses.FindIndex(c => string.Equals(c, storedClass, StringComparison.OrdinalIgnoreCase));
+            if (index >= 0)
+            {
+                ClassComboBox.SelectedIndex = index;
+            }
+            else
+            {
+                _availableClasses.Add(storedClass);
+                ClassComboBox.Items.Refresh();
+                ClassComboBox.SelectedItem = storedClass;
+            }
+        }
+        else
+        {
+            var meikoIndex = _availableClasses.FindIndex(c => string.Equals(c, "Meiko", StringComparison.OrdinalIgnoreCase));
+            if (meikoIndex >= 0)
+            {
+                ClassComboBox.SelectedIndex = meikoIndex;
+            }
+            else
+            {
+                ClassComboBox.SelectedIndex = 0;
+            }
+        }
 
         OverlayListBox.ItemsSource = _controller.Settings.Overlays;
         if (_controller.Settings.Overlays.Count > 0)
@@ -54,8 +104,9 @@ public partial class SettingsWindow : Window
         LockOverlaysCheckBox.IsChecked = _controller.Settings.OverlaysLocked;
         EnableDebugCheckBox.IsChecked = _controller.Settings.DebugEnabled;
         _suppressGeneralEvents = false;
-
-        RefreshStatus();
+		
+		ApplyClassFilter();
+		RefreshStatus();
     }
 	
 	private void OnShowAbout(object sender, RoutedEventArgs e)
@@ -100,7 +151,7 @@ public partial class SettingsWindow : Window
 
     private void OnApply(object sender, RoutedEventArgs e)
     {
-        _controller.UpdateGeneralSettings(LogDirTextBox.Text, PlayerNameTextBox.Text, PlayerGuidTextBox.Text);
+        _controller.UpdateGeneralSettings(LogDirTextBox.Text, PlayerNameTextBox.Text, PlayerGuidTextBox.Text, GetSelectedClassOrNull());
         _controller.SaveSettings();
         RefreshStatus();
         System.Windows.MessageBox.Show(this, "Settings saved.", "Fellowship Overlay", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -122,7 +173,7 @@ public partial class SettingsWindow : Window
 
     private void UpdateOverlayDetails()
     {
-            _suppressOverlayEvents = true;
+		_suppressOverlayEvents = true;
         try
         {
             if (_selectedOverlay == null)
@@ -146,6 +197,7 @@ public partial class SettingsWindow : Window
             ShowIconsOnlyCheckBox.IsChecked = _selectedOverlay.ShowIconsOnly;
             UpdateBuffAreaText();
             UpdateBuffSelections(_selectedOverlay.TrackedSpellIds);
+			_buffView.Refresh();
         }
         finally
         {
@@ -351,6 +403,7 @@ public partial class SettingsWindow : Window
             ShowIconsOnlyCheckBox.IsChecked = e.ShowIconsOnly;
             UpdateBuffAreaText();
             UpdateBuffSelections(e.TrackedSpellIds);
+			_buffView.Refresh();
         }
         finally
         {
@@ -370,6 +423,50 @@ public partial class SettingsWindow : Window
         EnableDebugCheckBox.IsChecked = enabled;
         _suppressGeneralEvents = false;
     }
+	
+	private void OnClassSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressGeneralEvents) return;
+        ApplyClassFilter();
+    }
+
+    private void ApplyClassFilter()
+    {
+        var selection = ClassComboBox.SelectedItem as string;
+        if (!string.IsNullOrWhiteSpace(selection) && !string.Equals(selection, BuffSelection.AllClassesOption, StringComparison.OrdinalIgnoreCase))
+        {
+            _selectedClass = selection;
+        }
+        else
+        {
+            _selectedClass = null;
+        }
+
+        _buffView.Refresh();
+    }
+
+    private bool FilterBuffSelection(object obj)
+    {
+        if (obj is not BuffSelection selection)
+        {
+            return false;
+        }
+
+        if (_selectedClass == null)
+        {
+            return true;
+        }
+
+        if (selection.Classes.Count == 0)
+        {
+            return true;
+        }
+
+        return selection.Classes.Any(c => string.Equals(c, _selectedClass, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private string? GetSelectedClassOrNull()
+        => _selectedClass;
 
     protected override void OnClosed(EventArgs e)
     {
@@ -381,7 +478,15 @@ public partial class SettingsWindow : Window
 	
     private sealed class BuffSelection : INotifyPropertyChanged
     {
+		 public const string AllClassesOption = "All champions";
+		
         public BuffDefinition Definition { get; }
+		
+		public IReadOnlyList<string> Classes => Definition.Classes;
+
+        private string? _groupName;
+
+        public string GroupName => _groupName ??= BuildGroupName();
 
         private bool _isTracked;
 
@@ -399,6 +504,16 @@ public partial class SettingsWindow : Window
         public BuffSelection(BuffDefinition definition)
         {
             Definition = definition;
+        }
+		
+		private string BuildGroupName()
+        {
+            if (Definition.Classes.Count > 0)
+            {
+                return string.Join(" / ", Definition.Classes);
+            }
+
+            return "General";
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

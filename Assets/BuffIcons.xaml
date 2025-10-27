@@ -81,6 +81,33 @@
         </DrawingImage.Drawing>
     </DrawingImage>
 	
+	<DrawingImage x:Key="Icon.Buff.ChallengerOrb">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="#FF1A237E">
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry Rect="0,0,64,64" RadiusX="16" RadiusY="16" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#FF7986CB">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="32,32" RadiusX="22" RadiusY="22" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#FFB3E5FC">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="32,32" RadiusX="12" RadiusY="12" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing Brush="#FFFFFFFF">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="42,24" RadiusX="5" RadiusY="5" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
 	<BitmapImage x:Key="Icon.Buff.SpiritedVortex" UriSource="pack://application:,,,/Assets/BuffImages/spirited_vortex.png" />
     <BitmapImage x:Key="Icon.Buff.SpiritedStrikes" UriSource="pack://application:,,,/Assets/BuffImages/spirited_strikes.png" />
     <BitmapImage x:Key="Icon.Buff.WardenOfTheTemple" UriSource="pack://application:,,,/Assets/BuffImages/warden_of_the_temple.png" />

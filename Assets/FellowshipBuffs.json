@@ -4,37 +4,50 @@
       "spellId": 1512,
       "name": "Resonance of Earth",
       "icon": "Icon.Buff.ResonanceOfEarth",
-      "category": "Earthsong Harmonies"
+      "category": "Earthsong Harmonies",
+      "classes": ["Meiko"]
     },
     {
       "spellId": 1574,
       "name": "Stone Shield",
       "icon": "Icon.Buff.StoneShield",
-      "category": "Earthsong Harmonies"
+      "category": "Earthsong Harmonies",
+      "classes": ["Meiko"]
     },
     {
       "spellId": 2164,
       "name": "Hidden Power",
       "icon": "Icon.Buff.HiddenPower",
-      "category": "Empowerments"
+      "category": "Empowerments",
+      "classes": ["Meiko"]
     },
     {
       "spellId": 1534,
       "name": "Spirited Strikes",
       "icon": "Icon.Buff.SpiritedStrikes",
-      "category": "Spirited Techniques"
+      "category": "Spirited Techniques",
+      "classes": ["Meiko"]
     },
     {
       "spellId": 1570,
       "name": "Spirited Vortex",
       "icon": "Icon.Buff.SpiritedVortex",
-      "category": "Spirited Techniques"
+      "category": "Spirited Techniques",
+      "classes": ["Meiko"]
     },
     {
       "spellId": 2447,
       "name": "Warden of the Temple",
       "icon": "Icon.Buff.WardenOfTheTemple",
-      "category": "Spirited Techniques"
+      "category": "Spirited Techniques",
+      "classes": ["Meiko"]
+    },
+    {
+      "spellId": 3501,
+      "name": "Challenger Orb Collected",
+      "icon": "Icon.Buff.ChallengerOrb",
+      "category": "Challenger Affix",
+      "classes": ["Challenger"]
     }
   ],
   "presets": [
@@ -60,6 +73,13 @@
         1570,
         1534,
         2447
+      ]
+    },
+    {
+      "name": "Challenger Orbs",
+      "description": "Counts the orb stacks needed to summon the Challenger miniboss.",
+      "spellIds": [
+        3501
       ]
     }
   ]

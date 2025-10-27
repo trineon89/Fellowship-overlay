@@ -141,11 +141,12 @@ public sealed class AppController : IDisposable
         OverlaySettingsChanged?.Invoke(this, overlay);
     }
 
-    public void UpdateGeneralSettings(string? logDir, string? playerName, string? playerGuid)
+    public void UpdateGeneralSettings(string? logDir, string? playerName, string? playerGuid, string? playerClass)
     {
         _settings.LogDirectory = string.IsNullOrWhiteSpace(logDir) ? null : logDir.Trim();
         _settings.PlayerName = string.IsNullOrWhiteSpace(playerName) ? null : playerName.Trim();
         _settings.PlayerGuid = string.IsNullOrWhiteSpace(playerGuid) ? null : playerGuid.Trim();
+		_settings.PlayerClass = string.IsNullOrWhiteSpace(playerClass) ? null : playerClass.Trim();
         RefreshMonitor();
     }
 
