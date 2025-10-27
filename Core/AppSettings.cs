@@ -26,5 +26,4 @@ public sealed class OverlaySettings
     public double Opacity { get; set; } = 0.85;
     public List<int> TrackedSpellIds { get; set; } = new();
 	public bool ShowIconsOnly { get; set; }
-    public CaptureRegionSettings? BuffCaptureRegion { get; set; }
 }

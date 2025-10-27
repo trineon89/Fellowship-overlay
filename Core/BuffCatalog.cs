@@ -86,7 +86,7 @@ public static class BuffCatalog
         new(1534, "Spirited Strikes", "Icon.Buff.SpiritedStrikes", "Spirited Techniques", new [] { "Meiko" }),
         new(1570, "Spirited Vortex", "Icon.Buff.SpiritedVortex", "Spirited Techniques", new [] { "Meiko" }),
         new(2447, "Warden of the Temple", "Icon.Buff.WardenOfTheTemple", "Spirited Techniques", new [] { "Meiko" }),
-        new(3501, "Shadow Lord's Orb Collected", "Icon.Buff.ShadowLordsOrbs", "Shadow Lord's Trial", new [] { "Challenger" }),
+        new(3501, "Shadow Lord's Orb Collected", "Icon.Buff.ShadowLordsOrbs", "Shadow Lord's Trial", Array.Empty<string>()),
     };
 
     private static readonly BuffPreset[] DefaultPresets =

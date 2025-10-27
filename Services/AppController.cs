@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using Fellowship_overlay.Core;
 
@@ -13,7 +12,6 @@ public sealed class AppController : IDisposable
     private AppSettings _settings;
     private readonly Dictionary<Guid, OverlayHost> _overlays = new();
     private BuffMonitor? _monitor;
-	private readonly GlobalInputMonitor _inputMonitor;
     private readonly DebugLogService _debugLog = new();
     private DebugWindow? _debugWindow;
 
@@ -27,8 +25,6 @@ public sealed class AppController : IDisposable
         _settings = SettingsStore.Load();
         EnsureDefaults();
         BuildOverlays();
-		_inputMonitor = new GlobalInputMonitor();
-        _inputMonitor.InputActivity += OnInputActivity;
         RefreshMonitor();
         if (_settings.DebugEnabled)
         {
@@ -321,22 +317,5 @@ public sealed class AppController : IDisposable
         }
         _overlays.Clear();
         CloseDebugWindow();
-		_inputMonitor.InputActivity -= OnInputActivity;
-        _inputMonitor.Dispose();
-    }
-
-    private void OnInputActivity(object? sender, EventArgs e)
-    {
-        System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-        {
-            var hosts = _overlays.Values.ToArray();
-            _ = Task.Run(() =>
-            {
-                foreach (var host in hosts)
-                {
-                    host.HandleInputActivity();
-                }
-            });
-        }));
     }
 }

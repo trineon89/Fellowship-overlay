@@ -32,9 +32,9 @@ This means events appear with a **natural delay of 1–3 seconds** — that’s 
 
 1. Windows 10 or 11  
 2. [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)  
-3. Read access to your *Fellowship* combat-log directory  
-4. **Advanced Combat Logging must be enabled** in the game’s settings  
-   - In *Fellowship*, open **Settings → Gameplay → Combat → Enable Advanced Combat Logging**  
+3. Read access to your *Fellowship* combat-log directory
+4. **Advanced Combat Logging must be enabled** in the game’s settings
+   - In *Fellowship*, open **Settings → Gameplay → Combat → Enable Advanced Combat Logging**
    - Without this option, the overlay will not detect buff events properly.
 
 ---
@@ -57,7 +57,6 @@ This means events appear with a **natural delay of 1–3 seconds** — that’s 
 - ⚙️ **Configurable overlays** — resize, move, and lock anywhere on your screen.  
 - 🧩 **Presets** — ready-to-use setups for Meiko’s tanking toolkit.  
 - 👁️ **Click-through mode** — keep overlays visible but non-interactive.  
-- 💡 **Screen-capture fallback** — optional visual recognition for buff icons if the combat log stalls.  
 
 ---
 

@@ -10,8 +10,13 @@
 	<UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+  </PropertyGroup>
+
  <PropertyGroup>
-  <Version>1.0.5</Version> 
+  <Version>1.0.5</Version>
   <AssemblyVersion>1.0.5.0</AssemblyVersion>
   <FileVersion>1.0.5.0</FileVersion>
   <InformationalVersion>1.0.5</InformationalVersion>

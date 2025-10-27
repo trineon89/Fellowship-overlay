@@ -47,7 +47,7 @@
       "name": "Shadow Lord's Orb Collected",
       "icon": "Icon.Buff.ShadowLordsOrbs",
       "category": "Shadow Lord's Trial",
-      "classes": ["Challenger"]
+      "classes": []
     }
   ],
   "presets": [

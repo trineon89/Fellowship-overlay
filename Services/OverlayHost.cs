@@ -8,8 +8,6 @@ namespace Fellowship_overlay.Services;
 
 public sealed class OverlayHost : IDisposable
 {
-	private static readonly TimeSpan CaptureHoldDuration = TimeSpan.FromSeconds(1.5);
-	
     private readonly OverlaySettings _settings;
     private readonly OverlayWindow _window;
     private readonly BuffStore _store = new();
@@ -18,10 +16,8 @@ public sealed class OverlayHost : IDisposable
     private readonly Action<OverlaySettings>? _onSettingsChanged;
     private bool _applyingSettings;
     private BuffMonitor? _monitor;
-	private (Buff Buff, BuffDefinition? Definition)[] _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
+    private (Buff Buff, BuffDefinition? Definition)[] _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
     private DateTimeOffset _lastUpdateTimestamp = DateTimeOffset.Now;
-	private bool _screenCaptureActive;
-    private DateTimeOffset _captureHoldUntil = DateTimeOffset.MinValue;
     private readonly object _stateLock = new();
 
     public Guid Id => _settings.Id;
@@ -34,8 +30,6 @@ public sealed class OverlayHost : IDisposable
             .Select((spellId, index) => (spellId, index))
             .ToDictionary(pair => pair.spellId, pair => pair.index);
         _onSettingsChanged = onSettingsChanged;
-
-        _screenCaptureActive = false;
 
         _window = new OverlayWindow(settings);
         _window.Show();
@@ -76,18 +70,10 @@ public sealed class OverlayHost : IDisposable
 
     private void OnTick(DateTimeOffset now)
     {
-		bool screenCaptureActive;
-        DateTimeOffset captureHoldUntil;
-        Dictionary<int, int> orderLookupSnapshot;
+		Dictionary<int, int> orderLookupSnapshot;
         lock (_stateLock)
         {
-            screenCaptureActive = _screenCaptureActive;
-			captureHoldUntil = _captureHoldUntil;
             orderLookupSnapshot = new Dictionary<int, int>(_orderLookup);
-        }
-        if (screenCaptureActive && now <= captureHoldUntil)
-        {
-            return;
         }
         _store.Prune(now);
         var snapshot = _store.Snapshot();
@@ -108,7 +94,6 @@ public sealed class OverlayHost : IDisposable
 
     public void UpdateFromSettings()
     {
-		var wasScreenCaptureActive = _screenCaptureActive;
         _applyingSettings = true;
         try
         {
@@ -118,7 +103,6 @@ public sealed class OverlayHost : IDisposable
         {
             _applyingSettings = false;
         }
-        bool screenCaptureChanged;
         (Buff Buff, BuffDefinition? Definition)[] snapshot;
         DateTimeOffset timestamp;
         lock (_stateLock)
@@ -131,21 +115,8 @@ public sealed class OverlayHost : IDisposable
                 _orderLookup[spellId] = index;
             }
 
-            _screenCaptureActive = false;
-            screenCaptureChanged = wasScreenCaptureActive;
-            _captureHoldUntil = DateTimeOffset.MinValue;
-
             snapshot = _lastBuffs;
             timestamp = _lastUpdateTimestamp == DateTimeOffset.MinValue ? DateTimeOffset.Now : _lastUpdateTimestamp;
-        }
-		if (screenCaptureChanged)
-        {
-            ClearStore();
-            lock (_stateLock)
-            {
-                snapshot = _lastBuffs;
-                timestamp = _lastUpdateTimestamp;
-            }
         }
 
         System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(snapshot, timestamp));
@@ -184,7 +155,6 @@ public sealed class OverlayHost : IDisposable
         {
             _lastBuffs = Array.Empty<(Buff, BuffDefinition?)>();
             _lastUpdateTimestamp = DateTimeOffset.Now;
-			_captureHoldUntil = DateTimeOffset.MinValue;
             snapshot = _lastBuffs;
             timestamp = _lastUpdateTimestamp;
         }
@@ -214,76 +184,5 @@ public sealed class OverlayHost : IDisposable
         _window.LocationChanged -= OnWindowLocationChanged;
         _window.SizeChanged -= OnWindowSizeChanged;
         _window.Close();
-    }
-	
-	public void HandleInputActivity()
-    {
-        CaptureRegionSettings? regionCopy;
-        int[] trackedIds;
-        Dictionary<int, int> orderLookupSnapshot;
-
-        lock (_stateLock)
-        {
-            if (!_screenCaptureActive)
-            {
-                return;
-            }
-
-            var region = _settings.BuffCaptureRegion;
-            if (region == null || !region.IsValid)
-            {
-                return;
-            }
-
-            regionCopy = region.Clone();
-
-            trackedIds = _trackedSpellIds.ToArray();
-            orderLookupSnapshot = new Dictionary<int, int>(_orderLookup);
-        }
-
-        using var capture = ScreenCaptureService.Instance.Capture(regionCopy);
-        if (capture == null)
-        {
-            return;
-        }
-
-        var recognized = BuffIconRecognizer.Instance.Recognize(capture, trackedIds);
-        var now = DateTimeOffset.Now;
-        if (recognized.Count == 0)
-        {
-            lock (_stateLock)
-            {
-                _captureHoldUntil = DateTimeOffset.MinValue;
-            }
-            return;
-        }
-
-        var ordered = recognized
-            .OrderBy(r => orderLookupSnapshot.TryGetValue(r.Definition.SpellId, out var index) ? index : int.MaxValue)
-            .ThenBy(r => r.Definition.Name)
-            .ToArray();
-
-        var mapped = ordered
-            .Select(r =>
-            {
-                var buff = new Buff
-                {
-                    SpellId = r.Definition.SpellId,
-                    Name = r.Definition.Name,
-                    Stacks = Math.Max(1, r.Stacks),
-                    AppliedAt = now,
-                    ExpiresAt = null
-                };
-                return (buff, (BuffDefinition?)r.Definition);
-            })
-            .ToArray();
-
-        lock (_stateLock)
-        {
-            _lastBuffs = mapped;
-            _lastUpdateTimestamp = now;
-			_captureHoldUntil = now.Add(CaptureHoldDuration);
-        }
-        System.Windows.Application.Current.Dispatcher.Invoke(() => _window.UpdateBuffs(mapped, now));
     }
 }
