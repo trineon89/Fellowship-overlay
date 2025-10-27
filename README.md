@@ -1,91 +1,132 @@
-# Fellowship Overlay
+# ![Icon](Assets/Icon.png) Fellowship Overlay  
+*A quality-of-life companion for the game **Fellowship***  
 
-Fellowship Overlay is a Windows desktop companion app that reads the Fellowship combat log and renders highly configurable buff overlays on top of the game. It is built with WPF on .NET 8 and designed to help support players track key uptime windows without alt-tabbing or manually reading the log.
+> **Track Meiko’s defensive buffs and Shadow Lord’s orbs easily — no more lost uptime in the chaos.**
 
-> <span style="color:#d32f2f"><strong>Heads up:</strong> Because the overlay reacts to combat-log entries, new events appear with a natural delay of roughly 1–3 seconds.</span>
+---
 
-## Features
+## 🧭 Overview
 
-- **Live buff tracking.** Watches the Fellowship combat log in real time and displays active buffs with timers, stack counts, and optional cooldown rings.
-- **Customizable overlays.** Create multiple overlays, rename them, set their size/opacity, drag them anywhere on screen, and choose between icon-only or detailed list layouts.
-- **Preset-driven spell selection.** Start quickly with built-in presets (Earthwarden Core, Empowerments, Spirited Synergy) or pick individual spell IDs from the bundled catalog.
-- **Screen capture fallback.** Optionally define a capture region so the overlay can recognize buff icons directly from the game UI when the combat log is momentarily quiet.
-- **Click-through locking.** Lock overlays to make them ignore mouse clicks during combat, then unlock to reposition or resize with visual cues.
-- **Debug tools.** An optional debug window echoes raw combat-log lines and parsed aura events to make troubleshooting easier.
-- **Hand-tuned for tanks.** Includes presets and recognition tuned so that Meiko (tank) is fully supported out of the box.
+**Fellowship Overlay** is a lightweight Windows app that enhances your gameplay experience by showing **clear, configurable overlays** for the buffs that actually matter.
 
-## Requirements
+The current version focuses entirely on:
+- **Meiko’s defensive buffs** — often buried in a sea of icons during combat.
+- **Shadow Lord’s orbs** — seamlessly integrated into the overlay for instant awareness.
 
-- Windows 10/11.
-- [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) (the app targets `net8.0-windows7.0`).
-- Read access to your Fellowship combat-log directory.
-- Sufficient permissions to install global keyboard/mouse hooks (needed for screen-capture recognition).
+This tool sits quietly on top of your game window, updating automatically from the *Fellowship* combat log.
 
-## Getting Started
+---
 
-### Downloading & Running
+## ⚠️ Important: Not Real-Time
 
-1. Download the latest release build (portable `.zip`) from your distribution channel or build from source (see below).
-2. Extract the archive and launch **Fellowship Overlay**.
-3. On first run the Settings window appears automatically so you can finish the setup below.
+Because *Fellowship* does **not expose live buff data to third-party tools**, the overlay must rely on **combat log parsing**.  
+This means events appear with a **natural delay of 1–3 seconds** — that’s how long the game itself takes to flush new log entries to disk.
 
-### Building from Source
+> 🔸 The overlay is as “live” as the combat log allows.  
+> 🔸 This limitation is **intentional and compliant** with the game’s **Terms of Service** — no memory reading, no injection, no network sniffing.  
+> 🔸 If the game developer ever provides an API, live tracking will be implemented immediately.
 
-```bash
-# Clone the repository and restore dependencies
-dotnet restore
+---
 
-# Build the WPF application
-dotnet build Fellowship-overlay.sln -c Release
+## ⚙️ Setup Requirements
 
-# Run the app (from the project directory)
-dotnet run --project Fellowship-overlay.csproj
-```
+1. Windows 10 or 11  
+2. [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)  
+3. Read access to your *Fellowship* combat-log directory  
+4. **Advanced Combat Logging must be enabled** in the game’s settings  
+   - In *Fellowship*, open **Settings → Gameplay → Combat → Enable Advanced Combat Logging**  
+   - Without this option, the overlay will not detect buff events properly.
 
-## Usage
+---
 
-1. **Point to your logs.** Choose the combat-log folder in *Settings → General → Combat log directory*.
-2. **Identify your character.** Enter the character name (and optional GUID if you play multiple characters).
-3. **Customize overlays.**
-   - Add overlays and apply presets for common buff collections.
-   - Toggle *Icons only* for compact views or leave it unchecked for rows with text and timers.
-   - Unlock overlays to drag or resize them, then lock again to return to click-through mode.
-4. **Fine-tune tracking.**
-   - Tick or untick individual spells in the checklist to adjust which buffs appear.
-   - Use *Capture buff area* to select a rectangle on screen for icon recognition during quiet log periods.
-5. **Save and monitor.** Click **Apply** to persist your settings. The status indicator will report whether the monitor is actively watching or missing required details.
+## 🚀 Quick Start
 
-### Debug Mode
+1. **Download** the latest release from the [Releases](../../releases) page.  
+2. **Extract** the `.zip` anywhere (portable, no installation needed).  
+3. **Launch** `Fellowship Overlay.exe`.  
+4. On first run, choose your *combat log folder* and enter your character name.  
+5. Position and lock the overlay where you want it.  
+6. Start your game — watch your buffs and orbs update automatically.
 
-Enable **Debug logging** to open a live debug window that captures raw log lines, parsed aura events, and recognition diagnostics. This is especially helpful when creating new presets or verifying combat-log output.
+---
 
-## Troubleshooting
+## ✨ Features
 
-- **Overlay says “Choose a valid combat-log folder.”** Double-check the directory points at the live `CombatLog*.txt` files generated by Fellowship.
-- **Timers feel late.** This is expected because log lines are flushed 1–3 seconds after events occur. The red warning above is a reminder of that inherent delay.
-- **Buff not listed.** Verify the spell ID exists in `Assets/FellowshipBuffs.json`, or add it there and restart so the catalog reloads.
-- **Screen capture detection fails.** Ensure the capture region fully covers the buff icons and that overlays have the relevant spells tracked.
+- 🛡️ **Real-time(ish) buff tracking** — visualises Meiko’s defensive buffs with timers and status rings.  
+- 💠 **Shadow Lord orb tracker** — displays orb count and phase timing.  
+- ⚙️ **Configurable overlays** — resize, move, and lock anywhere on your screen.  
+- 🧩 **Presets** — ready-to-use setups for Meiko’s tanking toolkit.  
+- 👁️ **Click-through mode** — keep overlays visible but non-interactive.  
+- 💡 **Screen-capture fallback** — optional visual recognition for buff icons if the combat log stalls.  
 
-## Repository Structure
+---
 
-```
-Assets/                  Embedded icons and buff catalog JSON.
-Core/                    Core models, settings, catalog, and log watcher.
-Services/                App controller, overlay hosts, capture, and recognition services.
-OverlayWindow.xaml*      WPF overlay UI.
-SettingsWindow.xaml*     Settings dialog for general and overlay-specific configuration.
-DebugWindow.xaml*        Debug and diagnostics tools.
-Installer/               Inno Setup scripts for packaging releases.
-```
+## 🧩 Customisation
 
-## Contributing
+- **Layout:** Choose between icon-only or detailed list mode.  
+- **Size & Opacity:** Fit the overlay cleanly into your UI.  
+- **Position:** Drag freely; lock it again before combat.  
+- **Presets:** Instantly load recommended buff sets for Meiko.  
 
-1. Fork the repository and create a feature branch.
-2. Run `dotnet format` (if available) and `dotnet build` before committing.
-3. Submit a pull request describing the motivation and changes.
+More roles, classes, and buff packs will follow later.
 
-Please follow the existing coding style—nullable reference types are enabled, and WPF resources are organized alongside their code-behind files.
+---
 
-## Acknowledgements
+## 🧠 Design Philosophy
 
-Maintained with care by trineon89 and the Fellowship community. The overlay relies on the Fellowship combat log to drive all in-app timers and recognizers.
+The overlay’s purpose is simple:  
+**Reduce noise, increase clarity.**
+
+It doesn’t hack the client or interfere with the game — it just reads what *Fellowship* already writes to disk and makes that information usable.  
+It’s a pure quality-of-life enhancement for players who want to perform better without staring at a cluttered buff bar.
+
+> *Less clutter. More control.*
+
+---
+
+## 🖼️ Icon Concept
+
+The icon is inspired by the official *Fellowship* emblem — a circular crest — combined with a subtle **shield-and-orb overlay** motif.  
+It symbolises protection and clarity, echoing Meiko’s defensive nature.  
+Colours: **dark steel with faint teal/blue highlights**, glowing slightly when buffs are active.
+
+---
+
+## 💬 Support & Contribution
+
+If you enjoy this tool or want to support development:  
+☕ **[Buy Me a Coffee](https://buymeacoffee.com/trineon89)**  
+
+Questions, bug reports, or collaboration offers:  
+💬 **Discord:** `trineon89`
+
+---
+
+## 🧑‍💻 Contributing Code
+
+Pull requests are welcome for:
+- New buff presets or class support  
+- UI / UX improvements  
+- Bug fixes  
+
+If you wish to modify or reuse code **outside of a pull request**, please contact **@trineon89** first.  
+The source is open for learning and improvement — but derivative distributions require prior permission.
+
+---
+
+## 📜 License
+
+This project is provided **for personal and non-commercial use**.  
+You may:
+- View, fork, and build it for personal use.  
+- Submit changes via pull request.
+
+You may **not**:
+- Redistribute modified versions publicly without prior written consent from `trineon89`.  
+- Use it commercially or bundle it in third-party launchers.
+
+By cloning or using this repository, you agree to respect these terms.
+
+---
+
+> Fellowship Overlay — *bringing clarity to chaos.*

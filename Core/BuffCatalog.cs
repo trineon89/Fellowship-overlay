@@ -86,7 +86,7 @@ public static class BuffCatalog
         new(1534, "Spirited Strikes", "Icon.Buff.SpiritedStrikes", "Spirited Techniques", new [] { "Meiko" }),
         new(1570, "Spirited Vortex", "Icon.Buff.SpiritedVortex", "Spirited Techniques", new [] { "Meiko" }),
         new(2447, "Warden of the Temple", "Icon.Buff.WardenOfTheTemple", "Spirited Techniques", new [] { "Meiko" }),
-        new(3501, "Challenger Orb Collected", "Icon.Buff.ChallengerOrb", "Challenger Affix", new [] { "Challenger" }),
+        new(3501, "Shadow Lord's Orb Collected", "Icon.Buff.ShadowLordsOrbs", "Shadow Lord's Trial", new [] { "Challenger" }),
     };
 
     private static readonly BuffPreset[] DefaultPresets =
@@ -94,7 +94,7 @@ public static class BuffCatalog
         new("Earthwarden Core", "Stone Shield and Resonance of Earth from the Earthwarden toolkit.", new [] { 1574, 1512 }),
         new("Empowerments", "Offensive empowerments that define burst windows.", new [] { 2164 }),
         new("Spirited Synergy", "Spirited Vortex, Spirited Strikes, and the Warden of the Temple stacks.", new [] { 1570, 1534, 2447 }),
-        new("Challenger Orbs", "Counts the orb stacks needed to summon the Challenger miniboss.", new [] { 3501 })
+        new("Shadow Lord's Orbs", "Counts the orb stacks needed to summon the Shadow Lord.", new [] { 3501 })
     };
 
     private sealed record CatalogData(

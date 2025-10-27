@@ -44,9 +44,9 @@
     },
     {
       "spellId": 3501,
-      "name": "Challenger Orb Collected",
-      "icon": "Icon.Buff.ChallengerOrb",
-      "category": "Challenger Affix",
+      "name": "Shadow Lord's Orb Collected",
+      "icon": "Icon.Buff.ShadowLordsOrbs",
+      "category": "Shadow Lord's Trial",
       "classes": ["Challenger"]
     }
   ],
@@ -76,8 +76,8 @@
       ]
     },
     {
-      "name": "Challenger Orbs",
-      "description": "Counts the orb stacks needed to summon the Challenger miniboss.",
+      "name": "Shadow Lord's Orbs",
+      "description": "Counts the orb stacks needed to summon the Shadow Lord.",
       "spellIds": [
         3501
       ]
