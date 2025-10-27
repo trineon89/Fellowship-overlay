@@ -32,7 +32,7 @@ This means events appear with a **natural delay of 1–3 seconds** — that’s 
 
 1. Windows 10 or 11  
 2. [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)  
-3. Read access to your *Fellowship* combat-log directory
+3. Read access to your *Fellowship* combat-log directory (**SteamLibrary\steamapps\common\Fellowship\fellowship\Saved\CombatLogs**)
 4. **Advanced Combat Logging must be enabled** in the game’s settings
    - In *Fellowship*, open **Settings → Gameplay → Combat → Enable Advanced Combat Logging**
    - Without this option, the overlay will not detect buff events properly.
