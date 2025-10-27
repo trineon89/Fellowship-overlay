@@ -1,5 +1,5 @@
-# ![Icon](Assets/Icon_512.png)
 # Fellowship Overlay  
+# ![Icon](Assets/Icon_512.png)
 *A quality-of-life companion for the game **Fellowship***  
 
 > **Track Meiko’s defensive buffs and Shadow Lord’s orbs easily — no more lost uptime in the chaos.**
@@ -81,14 +81,6 @@ It doesn’t hack the client or interfere with the game — it just reads what *
 It’s a pure quality-of-life enhancement for players who want to perform better without staring at a cluttered buff bar.
 
 > *Less clutter. More control.*
-
----
-
-## 🖼️ Icon Concept
-
-The icon is inspired by the official *Fellowship* emblem — a circular crest — combined with a subtle **shield-and-orb overlay** motif.  
-It symbolises protection and clarity, echoing Meiko’s defensive nature.  
-Colours: **dark steel with faint teal/blue highlights**, glowing slightly when buffs are active.
 
 ---
 
