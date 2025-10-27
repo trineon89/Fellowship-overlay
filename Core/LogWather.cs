@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,6 +21,8 @@ namespace Fellowship_overlay.Core
         private readonly StringBuilder _pending = new();
         private readonly byte[] _buffer = new byte[64 * 1024];
         private readonly char[] _charBuffer = new char[64 * 1024];
+        private readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(10);
+        private DateTime _nextRefreshUtc;
 
         public event Action<string>? Line;
 
@@ -39,6 +42,7 @@ namespace Fellowship_overlay.Core
             _fsw.Error += OnWatcherError;
             _fsw.EnableRaisingEvents = true;
 
+            _nextRefreshUtc = DateTime.UtcNow;
             OpenNewest();
         }
 
@@ -111,6 +115,11 @@ namespace Fellowship_overlay.Core
             List<string>? lines;
             lock (_sync)
             {
+				if (DateTime.UtcNow >= _nextRefreshUtc)
+                {
+                    OpenNewestLocked();
+                }
+
                 lines = PumpLocked();
             }
 
@@ -145,23 +154,36 @@ namespace Fellowship_overlay.Core
 
         private void OpenNewestLocked()
         {
-            var newest = GetNewestFile();
-            if (newest == null)
+            try
             {
-                CloseCurrentLocked();
-                return;
-            }
-
-            if (_currentPath != null && string.Equals(_currentPath, newest.FullName, StringComparison.OrdinalIgnoreCase))
-            {
-                if (_fs == null)
+                var newest = GetNewestFile();
+                if (newest == null)
                 {
-                    OpenFileLocked(_currentPath, tailExisting: true);
+                    CloseCurrentLocked();
+                    return;
                 }
-                return;
-            }
 
-            OpenFileLocked(newest.FullName, tailExisting: true);
+                if (_currentPath != null && string.Equals(_currentPath, newest.FullName, StringComparison.OrdinalIgnoreCase))
+                {
+                    Debug.WriteLine("Newest: " + newest.Name);
+                    if (_fs == null)
+                    {
+                        OpenFileLocked(_currentPath, tailExisting: true);
+                    }
+                    return;
+                }
+
+                OpenFileLocked(newest.FullName, tailExisting: true);
+            }
+            finally
+            {
+                ScheduleNextRefresh();
+            }
+        }
+		
+		private void ScheduleNextRefresh()
+        {
+            _nextRefreshUtc = DateTime.UtcNow + _refreshInterval;
         }
 
         private void OpenFileLocked(string path, bool tailExisting, long? resumePosition = null)

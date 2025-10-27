@@ -1,4 +1,5 @@
-# ![Icon](Assets/Icon_512.png) Fellowship Overlay  
+# ![Icon](Assets/Icon_512.png)
+# Fellowship Overlay  
 *A quality-of-life companion for the game **Fellowship***  
 
 > **Track Meiko’s defensive buffs and Shadow Lord’s orbs easily — no more lost uptime in the chaos.**

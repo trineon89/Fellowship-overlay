@@ -38,3 +38,5 @@ Thumbs.db
 
 # App settings you don’t want public (opt-in)
 appsettings.*.json
+
+build_InnoSetup.txt
