@@ -1,3 +1,4 @@
+# *Archived now, since Fellowship now holds the "important buff bar"*
 # Fellowship Overlay  
 # ![Icon](Assets/Icon_512.png)
 *A quality-of-life companion for the game **Fellowship***  
